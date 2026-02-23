@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#047857">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Laporan Biaya Operasional</title>
+    
+    <!-- 1. Font Figtree -->
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- 2. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                fontFamily: { sans: ['Figtree', 'sans-serif'] },
+                extend: {
+                    colors: {
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+                        dark: { 800: '#1e293b', 900: '#0f172a', 950: '#020617' },
+                        amber: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' } 
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'zoom': 'zoomIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        zoomIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- 3. Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- 4. Libraries Ekspor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Figtree', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scroll::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Area cetak tersembunyi */
+        #print-area { position: absolute; top: -9999px; left: -9999px; width: 1500px; background: white; padding: 40px; color: black; z-index: -50; font-family: 'Figtree', sans-serif; visibility: hidden; }
+        .acc-cell { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+        .modal-container { height: 100dvh; display: flex; flex-direction: column; }
+        
+        input, select, textarea { font-size: 16px !important; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 100;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; color: white;
+            backdrop-filter: blur(4px);
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top: 4px solid #10b981; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin-bottom: 1rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Badge Status CSS */
+        .status-badge { padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        .status-Pending { background-color: #fef08a; color: #854d0e; }
+        .status-Disetujui { background-color: #bbf7d0; color: #166534; }
+        .status-Ditolak { background-color: #fecaca; color: #991b1b; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark-950 text-gray-800 dark:text-gray-100 min-h-screen transition-colors duration-300">
+
+    <!-- TEMPLATE CETAK (Hidden) -->
+    <div id="print-area">
+        <h1 class="text-3xl font-bold text-black mb-6 tracking-tight">LAPORAN BIAYA OPERASIONAL</h1>
+        <div class="flex flex-col gap-2 mb-6 text-sm font-medium text-gray-800">
+            <div class="flex"><span class="w-32">NAMA KARYAWAN</span><span>: <span id="print-name" class="font-bold"></span></span></div>
+            <div class="flex"><span class="w-32">UNIT</span><span>: <span id="print-unit" class="font-bold"></span></span></div>
+        </div>
+        <table class="w-full text-xs border-collapse border border-black">
+            <thead>
+                <tr class="bg-white text-black text-center font-bold">
+                    <th class="border border-black p-2 w-10">No.</th>
+                    <th class="border border-black p-2 w-20">Tgl.</th>
+                    <th class="border border-black p-2">Kota Tujuan</th>
+                    <th class="border border-black p-2 w-48">Customer</th>
+                    <th class="border border-black p-2 w-12">Vol.</th>
+                    <th class="border border-black p-2 w-16">BBM Km</th>
+                    <th class="border border-black p-2 w-24">Rp.</th>
+                    <th class="border border-black p-2 w-24">Parkir</th>
+                    <th class="border border-black p-2 w-48">Tol</th>
+                    <th class="border border-black p-2 w-20">Perbaikan Mobil</th>
+                    <th class="border border-black p-2 w-20">Transportasi Umum</th>
+                    <th class="border border-black p-2 w-24">Uang Makan</th>
+                    <th class="border border-black p-2 w-24">Hotel</th>
+                    <th class="border border-black p-2 w-16">Extra Supir</th>
+                    <th class="border border-black p-2 w-24">Entertain</th>
+                    <th class="border border-black p-2 w-32">Lain-lain</th>
+                    <th class="border border-black p-2 w-28">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody id="print-body" class="align-top"></tbody>
+            <tfoot class="text-sm">
+                <tr id="print-footer-row" class="text-center border-t border-black font-bold bg-gray-100"></tr>
+                <tr class="border-t border-black"><td colspan="17" class="h-4"></td></tr>
+                <tr><td colspan="14"></td><td colspan="2" class="text-left font-medium py-1">Total yang telah dikeluarkan</td><td class="text-left font-medium py-1 px-2">:</td><td class="text-right font-bold py-1 px-2" id="print-total"></td></tr>
+                <tr><td colspan="14"></td><td colspan="2" class="text-left font-medium py-1">Kasbon</td><td class="text-left font-medium py-1 px-2">:</td><td class="text-right font-bold py-1 px-2" id="print-kasbon"></td></tr>
+                <tr><td colspan="14"></td><td colspan="2" class="text-left font-medium py-1">Sisa lebih / kurang</td><td class="text-left font-medium py-1 px-2">:</td><td class="text-right font-bold py-1 px-2" id="print-balance"></td></tr>
+                
+                <!-- TAMBAHAN KOLOM TANDA TANGAN (Untuk mode Cetak Gambar) -->
+                <tr><td colspan="17" class="h-8"></td></tr>
+                <tr><td colspan="14"></td><td colspan="3" class="text-center font-medium py-1" id="print-sig-date"></td></tr>
+                <tr><td colspan="14"></td><td colspan="3" class="text-center font-medium py-1">Dibuat Oleh,</td></tr>
+                <tr><td colspan="17" class="h-16"></td></tr>
+                <tr><td colspan="14"></td><td colspan="3" class="text-center font-bold py-1" id="print-sig-name"></td></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div id="app" v-cloak>
+
+        <!-- LOADING INDICATOR -->
+        <div v-if="isLoading" class="loading-overlay">
+            <div class="spinner"></div>
+            <p class="mt-4 font-bold animate-pulse text-center px-4">{{ loadingMessage }}</p>
+        </div>
+
+        <!-- HALAMAN LOGIN -->
+        <transition name="fade" mode="out-in">
+            <div v-if="!isLoggedIn" class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" key="login">
+                <!-- Background Decoration -->
+                <div class="absolute top-0 left-0 w-full h-64 bg-emerald-700 dark:bg-emerald-900 rounded-b-[3rem] z-0 shadow-2xl"></div>
+                <div class="absolute top-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float"></div>
+
+                <!-- Login Card -->
+                <div class="bg-white dark:bg-dark-900 w-full max-w-sm rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 z-10 overflow-hidden relative">
+                    <div class="p-8 pb-6 text-center">
+                        <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-inner">
+                            <svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Selamat Datang</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Sistem Laporan Operasional</p>
+                    </div>
+                    <div class="px-8 pb-8 space-y-5">
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1 mb-1 block">Email Akses</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></span>
+                                <input type="email" v-model="loginForm.email" @keyup.enter="handleLogin" class="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-gray-800 dark:text-white" placeholder="email@kudus.puragroup.com">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase ml-1 mb-1 block">Password</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg></span>
+                                <input type="password" v-model="loginForm.password" @keyup.enter="handleLogin" class="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-dark-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-gray-800 dark:text-white" placeholder="Tgl.lahir (ddmmyyyy)">
+                            </div>
+                        </div>
+                        <button @click="handleLogin" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 transition transform active:scale-95 flex justify-center items-center gap-2">
+                            <span>Masuk Aplikasi</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </div>
+                    <button @click="toggleTheme" class="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-800 transition">
+                         <svg v-if="isDark" class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg v-else class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    </button>
+                </div>
+                <div class="absolute bottom-6 text-center w-full text-xs text-white/60">
+                    &copy; 2026 Pura Group Operational Cost System
+                </div>
+            </div>
+        </transition>
+
+        <!-- HALAMAN UTAMA -->
+        <transition name="fade" mode="out-in">
+            <div v-if="isLoggedIn" class="max-w-md mx-auto sm:max-w-4xl w-full min-h-screen flex flex-col bg-gray-50 dark:bg-dark-950 sm:shadow-2xl" key="app">
+                
+                <!-- HEADER APP -->
+                <header class="bg-emerald-700 dark:bg-emerald-900 text-white p-4 sticky top-0 z-30 shadow-md flex justify-between items-center pt-safe-top">
+                    <div>
+                        <h1 class="font-bold text-lg font-figtree">Biaya Operasional</h1>
+                        <div class="flex items-center gap-1 opacity-90 mt-0.5">
+                            <!-- Indikator Role Karyawan -->
+                            <span v-if="currentUser.role === 'admin'" class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">Admin</span>
+                            <span v-if="currentUser.role === 'kasir'" class="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">Kasir</span>
+                            <div v-if="currentUser.role === 'karyawan'" class="w-2 h-2 rounded-full animate-pulse bg-green-400"></div>
+                            <p class="text-xs font-light">{{ currentUser.name || 'Memuat Profil...' }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Tombol Sync Cloud -->
+                        <button @click="syncData" class="p-2 rounded-full bg-blue-500/80 hover:bg-blue-600 transition flex items-center gap-1" title="Tarik/Sinkronisasi Cloud">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        </button>
+
+                        <button @click="openSettings" class="p-2 rounded-full bg-emerald-800/40 hover:bg-emerald-600 transition" title="Info Sistem">
+                            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </button>
+                        <button v-if="currentUser.role === 'karyawan'" @click="resetReport" class="flex items-center gap-1.5 bg-emerald-800/40 hover:bg-red-500/90 text-white border border-emerald-600/30 px-3 py-1.5 rounded-lg transition active:scale-95 shadow-sm" title="Hapus Riwayat">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                        <button @click="toggleTheme" class="p-2 rounded-full bg-emerald-800/40 hover:bg-emerald-600 transition">
+                            <svg v-if="isDark" class="w-5 h-5 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <svg v-else class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        </button>
+                        <button @click="handleLogout" class="p-2 rounded-full bg-red-500/80 hover:bg-red-600 text-white transition" title="Keluar">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        </button>
+                    </div>
+                </header>
+
+                <main class="p-4 space-y-5 font-light flex-1 pb-32">
+                    
+                    <!-- DATA HEADER (PROFIL OTOMATIS BERDASARKAN LOGIN) -->
+                    <div class="bg-white dark:bg-dark-800 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-4 relative overflow-visible z-20">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                            <svg class="w-24 h-24 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <h2 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700 pb-2">Profil Karyawan</h2>
+                        
+                        <div class="grid grid-cols-1 gap-4 relative">
+                            <!-- Nama Karyawan (Terkunci) -->
+                            <div class="relative">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Nama {{ currentUser.role === 'karyawan' ? 'Karyawan' : 'Pengguna' }}</label>
+                                <div class="relative group">
+                                    <span class="absolute left-4 top-3.5 text-emerald-500">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        :value="currentUser.name" 
+                                        readonly
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-100 dark:bg-dark-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-800 dark:text-white outline-none cursor-not-allowed text-sm"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <!-- Unit (Terkunci) -->
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Unit / Divisi (Otomatis)</label>
+                                <div class="w-full p-3 bg-gray-100 dark:bg-dark-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300 flex items-center gap-2 text-sm">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                    {{ currentUser.unit || '-' }}
+                                </div>
+                            </div>
+
+                            <!-- Kasbon (Hanya diedit oleh Karyawan) -->
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Kasbon / Uang Jalan</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-3.5 text-sm font-bold text-emerald-600">Rp</span>
+                                    <input type="text" inputmode="numeric" :value="header.kasbon" @input="formatHeaderKasbon" :disabled="currentUser.role !== 'karyawan'" class="w-full pl-10 p-3 bg-white dark:bg-dark-800 border-2 border-emerald-100 dark:border-emerald-900/50 rounded-xl font-extrabold text-xl text-emerald-700 dark:text-emerald-400 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition disabled:opacity-70 disabled:bg-gray-100 dark:disabled:bg-gray-800" placeholder="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DASHBOARD -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border-l-4 border-orange-400 dark:border-orange-500">
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase">{{ currentUser.role === 'karyawan' ? 'Total Biaya (Terfilter)' : 'Total Seluruh Data' }}</p>
+                            <p class="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white mt-1 truncate">{{ formatCurrency(grandTotal) }}</p>
+                        </div>
+                        <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border-l-4" :class="balance >= 0 ? 'border-emerald-500' : 'border-red-500'">
+                            <p class="text-[10px] font-bold uppercase" :class="balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">
+                                {{ currentUser.role !== 'karyawan' ? 'Status' : (balance >= 0 ? 'Sisa Kasbon' : 'Kurang') }}
+                            </p>
+                            <p v-if="currentUser.role === 'karyawan'" class="text-lg sm:text-2xl font-bold mt-1 truncate" :class="balance >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'">
+                                {{ formatCurrency(Math.abs(balance)) }}
+                            </p>
+                            <p v-else class="text-xs font-bold mt-2 text-blue-600 dark:text-blue-400">Sync Cloud Aktif</p>
+                        </div>
+                    </div>
+
+                    <!-- FILTER TANGGAL -->
+                    <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                        <h3 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">Filter Periode</h3>
+                        <div class="flex gap-3 items-end">
+                            <div class="flex-1">
+                                <label class="text-[10px] text-gray-400 font-bold block mb-1">Dari Tanggal</label>
+                                <input type="date" v-model="filterDateStart" class="w-full p-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-dark-900 dark:text-white">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[10px] text-gray-400 font-bold block mb-1">Sampai Tanggal</label>
+                                <input type="date" v-model="filterDateEnd" class="w-full p-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-dark-900 dark:text-white">
+                            </div>
+                            <button @click="resetFilter" class="p-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-200 transition" title="Reset Filter">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- LIST DATA (FILTERED) -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center px-1">
+                            <h3 class="font-bold text-gray-700 dark:text-gray-200 text-lg">Riwayat Laporan ({{ filteredRows.length }})</h3>
+                            <button v-if="filteredRows.length > 0 && currentUser.role === 'karyawan'" @click="confirmClear" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg active:bg-red-100 transition hover:bg-red-100">Hapus Semua</button>
+                        </div>
+
+                        <div v-if="filteredRows.length === 0" class="flex flex-col items-center justify-center py-12 bg-white dark:bg-dark-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-center opacity-60">
+                            <svg class="w-16 h-16 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                            <p class="text-gray-500 dark:text-gray-400 font-medium">Belum ada data {{ filterDateStart || filterDateEnd ? 'di periode ini' : '' }}</p>
+                        </div>
+
+                        <div v-else class="space-y-3">
+                            <div v-for="(row, index) in filteredRows" :key="row.id" class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group">
+                                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 transition-all group-hover:w-2"></div>
+                                <div class="pl-3">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <h4 class="font-bold text-gray-800 dark:text-gray-100">{{ row.city }}</h4>
+                                                <span :class="['status-badge', 'status-' + (row.status || 'Pending')]">{{ row.status || 'Pending' }}</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDateID(row.date) }} <span v-if="currentUser.role !== 'karyawan'">• {{ row.salesName }}</span></p>
+                                        </div>
+                                        <span class="font-bold text-emerald-600 dark:text-emerald-400 text-lg">{{ formatCurrency(row.total) }}</span>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-gray-700/50 p-2 rounded mt-2 text-xs text-gray-600 dark:text-gray-300 line-clamp-1">
+                                        <b class="text-gray-500 dark:text-gray-400">Cust:</b> {{ row.customer }}
+                                    </div>
+                                    
+                                    <p class="mt-2 text-[10px] font-medium text-amber-600 dark:text-amber-400 leading-relaxed">{{ getSummaryString(row) }}</p>
+
+                                    <!-- Action Buttons -->
+                                    <div class="flex gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 z-10 relative">
+                                        
+                                        <!-- Jika Karyawan -->
+                                        <template v-if="currentUser.role === 'karyawan'">
+                                            <button @click="editRow(row)" :disabled="row.status === 'Disetujui'" :class="row.status === 'Disetujui' ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 hover:bg-blue-100 active:scale-95'" class="flex-1 py-2 text-xs font-bold rounded-lg transition">{{ row.status === 'Disetujui' ? 'Terkunci' : 'Edit' }}</button>
+                                            <button @click="requestDelete(row.id)" :disabled="row.status === 'Disetujui'" :class="row.status === 'Disetujui' ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 hover:bg-red-100 active:scale-95'" class="flex-1 py-2 text-xs font-bold rounded-lg transition">Hapus</button>
+                                        </template>
+
+                                        <!-- Jika Admin / Kasir -->
+                                        <template v-if="currentUser.role === 'admin' || currentUser.role === 'kasir'">
+                                            <button @click="editRow(row)" class="flex-1 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 text-xs font-bold rounded-lg hover:bg-blue-100 active:scale-95 transition">Detail / Edit</button>
+                                            <button @click="openValidationModal(row)" class="flex-1 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 text-xs font-bold rounded-lg hover:bg-purple-100 active:scale-95 transition">Validasi</button>
+                                        </template>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOMBOL EKSPOR -->
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-3 gap-3">
+                            <button @click="exportAction('pdf')" class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800 rounded-2xl font-bold text-xs shadow-sm hover:bg-red-100 active:scale-95 transition">
+                                <span class="text-xl">📄</span><span>Unduh PDF</span>
+                            </button>
+                            <button @click="exportAction('excel')" class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800 rounded-2xl font-bold text-xs shadow-sm hover:bg-emerald-100 active:scale-95 transition">
+                                <span class="text-xl">📊</span><span>Unduh Excel</span>
+                            </button>
+                            <button @click="exportAction('image')" class="flex flex-col items-center justify-center gap-1.5 py-3 px-2 bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 rounded-2xl font-bold text-xs shadow-sm hover:bg-blue-100 active:scale-95 transition">
+                                <span class="text-xl">🖼️</span><span>Unduh Gambar</span>
+                            </button>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- FAB ADD -->
+                <div v-if="currentUser.role === 'karyawan'" class="fixed bottom-6 right-6 z-40 pb-safe-bottom">
+                    <button @click="openForm" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 text-white rounded-full shadow-xl shadow-emerald-600/30 p-4 flex items-center gap-2 active:scale-95 transition transform hover:scale-105">
+                        <span class="text-2xl leading-none font-bold mb-1">+</span>
+                        <span class="font-bold pr-1">Tambah</span>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
+        <!-- MODAL INFO / SETTINGS -->
+        <div v-if="showSettings" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-zoom">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Info Sistem</h3>
+                <p class="text-sm text-gray-500 mb-4">Aplikasi ini berjalan secara mandiri dan di-hosting via GitHub. Akses diamankan dengan Firebase Auth dan data dikirim ke Google Sheets.</p>
+                <div class="flex gap-3 mt-4">
+                    <button @click="showSettings = false" class="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow-lg">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL VALIDASI (ADMIN & KASIR) -->
+        <div v-if="showValidationModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-zoom">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Validasi Laporan</h3>
+                <p class="text-sm text-gray-500 mb-4">{{ selectedRow.salesName }} - {{ formatCurrency(selectedRow.total) }}</p>
+                <div class="flex flex-col gap-3 mt-4">
+                    <button @click="submitValidation('Disetujui')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition">✅ Setujui</button>
+                    <button @click="submitValidation('Ditolak')" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition">❌ Tolak</button>
+                    <button @click="showValidationModal = false" class="w-full py-3 mt-2 bg-gray-100 text-gray-600 font-bold rounded-xl transition">Batal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL FORM INPUT -->
+        <div v-if="showForm" class="fixed inset-0 z-[50] flex flex-col h-full sm:rounded-2xl sm:h-[90%] sm:max-w-2xl sm:mx-auto sm:mt-10 sm:shadow-2xl sm:border sm:border-gray-200 dark:sm:border-gray-700 pt-safe-top bg-white dark:bg-dark-900 text-gray-800 dark:text-gray-100">
+            <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-dark-800 shadow-sm z-10">
+                <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">{{ isEditing ? (currentUser.role === 'karyawan' ? 'Edit Data' : 'Detail Data') : 'Tambah Baru' }}</h3>
+                <button @click="showForm = false" class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full text-gray-500 dark:text-gray-300 hover:bg-gray-200 transition">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll bg-gray-50 dark:bg-dark-900 pb-24">
+                
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800 flex gap-2 items-start">
+                    <span class="text-xl">ℹ️</span>
+                    <p class="text-xs text-blue-700 dark:text-blue-300 font-medium leading-relaxed mt-0.5">
+                        <span v-if="isEditing">Saat disimpan, data akan diupdate ke Google Sheet dan ditandai <b class="text-yellow-600 bg-yellow-100 px-1 rounded">Kuning</b>.</span>
+                        <span v-else>Data akan dikirim otomatis ke Google Sheet saat Anda menekan tombol Simpan.</span>
+                    </p>
+                </div>
+
+                <!-- INPUT FORM -->
+                <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Tanggal</label><input type="date" v-model="form.date" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white"></div>
+                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Kota</label><input type="text" v-model="form.city" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white" placeholder="Kota"></div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</label>
+                        <textarea v-model="form.customer" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white placeholder-gray-400" placeholder="Contoh: Customer 1, Customer 2, Customer 3 (pisahkan dengan koma)" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- BBM & KENDARAAN -->
+                <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase">BBM & Kendaraan</h4>
+                    <div>
+                        <label class="text-[10px] text-gray-500 dark:text-gray-400 font-bold block mb-1">Plat Nomor (Opsional)</label>
+                        <input type="text" v-model="form.plateNo" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2.5 bg-white dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg text-base font-bold text-center uppercase tracking-widest dark:text-white" placeholder="K 1234 AB">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        <div><label class="text-[10px] text-gray-500 font-bold">Vol (L)</label><input type="number" step="0.1" v-model="form.fuelVol" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center dark:text-white"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">KM</label><input type="number" v-model="form.fuelKm" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center dark:text-white"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">Rp</label><input type="text" :value="form.costFuel" @input="formatInput($event, 'costFuel')" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center text-blue-700 dark:text-blue-300"></div>
+                    </div>
+                </div>
+
+                <!-- TOL -->
+                <div class="bg-orange-50/50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/30 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase">Rincian Tol</h4><span class="text-xs font-bold bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalTollCost) }}</span></div>
+                    <div class="space-y-3">
+                        <div v-for="(toll, index) in tollList" :key="index" class="flex gap-2">
+                            <input type="text" v-model="toll.name" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="flex-1 p-2 bg-white dark:bg-gray-700 border border-orange-200 dark:border-orange-800 rounded-lg text-sm dark:text-white placeholder-gray-400" placeholder="Pintu Tol">
+                            <input type="text" :value="toll.cost" @input="formatTollInput($event, index)" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-24 p-2 bg-white dark:bg-gray-700 border border-orange-200 dark:border-orange-800 rounded-lg text-sm font-bold dark:text-white" placeholder="0">
+                            <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="removeToll(index)" class="text-red-500 font-bold px-2">✕</button>
+                        </div>
+                    </div>
+                    <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="addToll" class="w-full py-2 border border-dashed border-orange-300 text-orange-600 rounded-lg text-sm font-bold">+ Tambah Baris Tol</button>
+                </div>
+
+                <!-- BIAYA STANDAR LAINNYA -->
+                <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-5">
+                    <h4 class="text-sm font-bold text-gray-500 uppercase border-b pb-2">Biaya Rutin</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div v-for="(label, key) in costFields" :key="key"><label class="text-xs font-bold text-gray-500 block mb-1">{{ label }}</label><div class="relative"><span class="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">Rp</span><input type="text" :value="form[key]" @input="formatInput($event, key)" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full pl-8 p-2 border rounded-lg font-bold text-gray-700 dark:bg-gray-700 dark:text-white"></div></div>
+                    </div>
+                </div>
+
+                <!-- LAIN-LAIN -->
+                <div class="bg-gray-50/50 dark:bg-gray-700/10 p-4 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Rincian Lain-lain</h4><span class="text-xs font-bold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalOtherCost) }}</span></div>
+                    <div class="space-y-3"><div v-for="(item, index) in otherList" :key="index" class="flex flex-col sm:flex-row gap-2 bg-white dark:bg-gray-700 p-2 rounded-xl border border-gray-200 dark:border-gray-600">
+                        <input type="text" v-model="item.name" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="flex-1 p-2 bg-transparent border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-gray-600 text-base font-medium outline-none dark:text-white" placeholder="Contoh : Tambal Ban, dll">
+                        <div class="flex gap-2 items-center"><span class="text-gray-400 text-xs pl-2 font-bold">Rp</span><input type="text" inputmode="numeric" :value="item.cost" @input="formatOtherInput($event, index)" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-32 sm:w-40 p-2 bg-transparent text-lg font-bold text-gray-700 dark:text-white outline-none" placeholder="0"><button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="removeOther(index)" class="w-10 h-10 flex items-center justify-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg">✕</button></div>
+                    </div></div>
+                    <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="addOther" class="w-full py-2 border border-dashed border-gray-400 text-gray-500 dark:text-gray-400 rounded-xl text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">+ Tambah Item Lain-lain</button>
+                </div>
+            </div>
+            <div class="p-4 bg-white dark:bg-dark-800 border-t border-gray-100 dark:border-gray-700 sticky bottom-0 z-10 shadow-lg pb-safe-bottom">
+                <div class="flex justify-between items-center mb-3"><span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Total Entri Ini</span><span class="text-xl font-bold text-emerald-600 dark:text-emerald-400">{{ formatCurrency(currentFormTotal) }}</span></div>
+                
+                <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="saveEntry" class="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-lg shadow-lg active:scale-95 transition">{{ isEditing ? 'Update & Kirim' : 'Simpan & Kirim' }}</button>
+                <button v-else @click="showForm = false" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3.5 rounded-xl text-lg shadow-lg active:scale-95 transition">Tutup Detail</button>
+
+            </div>
+        </div>
+
+        <!-- MODAL KONFIRMASI HAPUS -->
+        <div v-if="showDeleteModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-zoom">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Konfirmasi Hapus</h3>
+                <div class="flex gap-3 mt-4"><button @click="showDeleteModal = false" class="flex-1 py-2.5 bg-gray-100 rounded-xl font-bold">Batal</button><button @click="executeDelete" class="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl shadow-lg">Ya, Hapus</button></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MENGGUNAKAN TYPE MODULE UNTUK FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        // =========================================================================
+        // URL WEB APP GOOGLE SCRIPT TERBARU
+        // =========================================================================
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwftinAM51hWJ0-NS6cAYeHM8W-mn8JVh_dtDUiRkeH4WpGCL6gtpIYtOFfPyYgXWlm/exec"; 
+
+        // =========================================================
+        // KAMUS DATA KARYAWAN (Dengan Email Admin dan Kasir)
+        // =========================================================
+        const daftarKaryawan = {
+            "maris@kudus.puragroup.com": { nama: "MARIS TRI WARDANI", unit: "Finance", role: "kasir" },
+            "bayufajar@kudus.puragroup.com": { nama: "BAYU FAJAR HABIBI", unit: "IT & Admin", role: "admin" },
+            
+            "aguscombi@kudus.puragroup.com": { nama: "AGUS JOKO PITONO", unit: "Job Order", role: "karyawan" },
+            "agus-ps@kudus.puragroup.com": { nama: "AGUS PUJI SANTOSO", unit: "PM Group", role: "karyawan" },
+            "riyanto_agus@kudus.puragroup.com": { nama: "AGUS RIYANTO", unit: "Job Order", role: "karyawan" },
+            "alexander-p@kudus.puragroup.com": { nama: "ALEXANDER PRASETYO", unit: "Job Order", role: "karyawan" },
+            "bimorejoko@kudus.puragroup.com": { nama: "BIMO REJOKO", unit: "Collector", role: "karyawan" },
+            "didik_setyawan@kudus.puragroup.com": { nama: "DIDIK SETYAWAN", unit: "Job Order", role: "karyawan" },
+            "djoni_purnomo@kudus.puragroup.com": { nama: "DJONI PURNOMO SOELISTIJO", unit: "Job Order", role: "karyawan" },
+            "dwi_tss@kudus.puragroup.com": { nama: "DWI SUCAHYONO", unit: "TSS", role: "karyawan" },
+            "fredy.setiawan@kudus.puragroup.com": { nama: "FREDY SETIAWAN PLATINI DTH", unit: "Collector", role: "karyawan" },
+            "christ-t@kudus.puragroup.com": { nama: "GATOT CHRISTIAN TRIANTOKO", unit: "Job Order", role: "karyawan" },
+            "handoko@kudus.puragroup.com": { nama: "HANDOKO JUWONO", unit: "Job Order", role: "karyawan" },
+            "henry@kudus.puragroup.com": { nama: "HENRY CAHYA SUGIARTO", unit: "Collector", role: "karyawan" },
+            "intanindah@kudus.puragroup.com": { nama: "INTAN HERYATI INDAH", unit: "TSS", role: "karyawan" },
+            "jatiwicaksono@kudus.puragroup.com": { nama: "JATI WICAKSONO", unit: "Coating Adhesif", role: "karyawan" },
+            "jefri-k@kudus.puragroup.com": { nama: "JEFRI KURNIAWAN", unit: "PM Group", role: "karyawan" },
+            "joshua-b@kudus.puragroup.com": { nama: "JOSHUA BERNADINO LISTIANTO", unit: "PM Group", role: "karyawan" },
+            "krisna.hutomo@kudus.puragroup.com": { nama: "KRISNA SATRIO HUTOMO", unit: "Job Order", role: "karyawan" },
+            "kust_tss@kudus.puragroup.com": { nama: "KUSTARYONO", unit: "TSS", role: "karyawan" },
+            "marwanto@kudus.puragroup.com": { nama: "MARWANTO", unit: "Job Order", role: "karyawan" },
+            "michelle.d@kudus.puragroup.com": { nama: "MICHELLE DHIFA SEPTIANI NUGROHO", unit: "Job Order", role: "karyawan" },
+            "adam-m@kudus.puragroup.com": { nama: "MUHAMMAD ADAM MAULANA", unit: "Collector", role: "karyawan" },
+            "collector_jateng@kudus.puragroup.com": { nama: "MUHAMMAD CHAIRUL WAHYUDI", unit: "Collector", role: "karyawan" },
+            "retno_tss@kudus.puragroup.com": { nama: "RETNO WIDYASARI", unit: "TSS", role: "karyawan" },
+            "danu@kudus.puragroup.com": { nama: "RIZKY DANU PRAKOSO", unit: "PM Group", role: "karyawan" },
+            "rokhani@kudus.puragroup.com": { nama: "ROKHANI DHANANJAYA", unit: "Job Order", role: "karyawan" },
+            "rurizaki@kudus.puragroup.com": { nama: "RURI ZAKI KURNIAWAN", unit: "Collector", role: "karyawan" },
+            "septyo_dwi@kudus.puragroup.com": { nama: "SEPTYO DWI HARMANTO", unit: "PST", role: "karyawan" },
+            "u_ud@kudus.puragroup.com": { nama: "SHOLAHUDDIN", unit: "Metallizing & Indostam", role: "karyawan" },
+            "sulistianto@kudus.puragroup.com": { nama: "SULISTIANTO", unit: "Collector", role: "karyawan" },
+            "suuunarto@gmail.com": { nama: "SUNARTO", unit: "Driver", role: "karyawan" },
+            "tiananton@kudus.puragroup.com": { nama: "TIAN ANTON SOETRISNO", unit: "Collector", role: "karyawan" },
+            "warsito@kudus.puragroup.com": { nama: "WARSITO", unit: "Job Order", role: "karyawan" },
+            "yolandakartika@kudus.puragroup.com": { nama: "YOLANDA KARTIKA DEWI", unit: "HR", role: "karyawan" }
+        };
+
+        // =========================================================
+        // KONFIGURASI FIREBASE AUTHENTICATION
+        // =========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOc6bPBHFSbVsYQF5qszSjBwziQEI6rEc",
+            authDomain: "biaya-opr.firebaseapp.com",
+            projectId: "biaya-opr",
+            storageBucket: "biaya-opr.firebasestorage.app",
+            messagingSenderId: "597934019409",
+            appId: "1:597934019409:web:b90d485f15a8f43f423970",
+            measurementId: "G-9PRKWL803Q"
+        };
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+
+        // INISIALISASI VUE APP
+        const { createApp, ref, computed, reactive, onMounted, watch } = window.Vue;
+
+        createApp({
+            setup() {
+                const isDark = ref(false);
+                const showDeleteModal = ref(false);
+                const deleteTargetId = ref(null);
+                const deleteType = ref('single');
+                const isLoading = ref(false);
+                const loadingMessage = ref('Memproses...');
+                const showSettings = ref(false);
+                
+                const filterDateStart = ref('');
+                const filterDateEnd = ref('');
+
+                const isLoggedIn = ref(false);
+                const loginForm = reactive({ email: '', password: '' });
+                const currentUser = reactive({ name: '', unit: '', role: 'karyawan', email: '' });
+                const header = reactive({ salesName: '', unit: '', kasbon: '' }); 
+                
+                const currentDate = ref(new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }));
+
+                const rows = ref([]);
+
+                watch(rows, (newVal) => {
+                    localStorage.setItem('salesAppRows', JSON.stringify(newVal));
+                }, { deep: true });
+
+                const filteredRows = computed(() => {
+                    if (!filterDateStart.value && !filterDateEnd.value) return rows.value;
+                    return rows.value.filter(row => {
+                        const rowDate = row.date; 
+                        const start = filterDateStart.value; const end = filterDateEnd.value;
+                        if (start && end) return rowDate >= start && rowDate <= end;
+                        if (start) return rowDate >= start;
+                        if (end) return rowDate <= end;
+                        return true;
+                    });
+                });
+
+                const resetFilter = () => { filterDateStart.value = ''; filterDateEnd.value = ''; };
+
+                // ----------------------------------------------------
+                // FUNGSI SINKRONISASI DATA DARI CLOUD
+                // ----------------------------------------------------
+                const syncData = () => {
+                    if(!currentUser.email) return;
+                    isLoading.value = true;
+                    loadingMessage.value = "Sinkronisasi Cloud...";
+                    
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'read', email: currentUser.email, userName: currentUser.name, role: currentUser.role })
+                    })
+                    .then(res => res.json())
+                    .then(result => {
+                        isLoading.value = false;
+                        if(result.status === 'success') {
+                            rows.value = result.data;
+                        } else {
+                            alert("Gagal mengambil data dari server: " + result.message);
+                        }
+                    })
+                    .catch(err => { 
+                        isLoading.value = false; 
+                        console.error(err); 
+                        alert("Gagal koneksi ke server Cloud untuk sinkronisasi.");
+                    });
+                };
+
+                onMounted(() => {
+                    // Cek preferensi Dark Mode HP User
+                    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                        isDark.value = true; document.documentElement.classList.add('dark');
+                    }
+
+                    // Listener Firebase: Cek otomatis apakah user masih login
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            isLoggedIn.value = true;
+                            const emailUser = user.email.toLowerCase();
+                            
+                            // Cocokkan email dengan Daftar Karyawan
+                            const profil = daftarKaryawan[emailUser] || { nama: emailUser, unit: "Unit Tidak Terdaftar", role: "karyawan" };
+                            
+                            currentUser.name = profil.nama;
+                            currentUser.unit = profil.unit;
+                            currentUser.role = profil.role || 'karyawan';
+                            currentUser.email = emailUser;
+                            header.salesName = profil.nama;
+                            header.unit = profil.unit;
+
+                            // Tarik data setelah berhasil login
+                            syncData();
+                        } else {
+                            isLoggedIn.value = false;
+                        }
+                    });
+
+                    // Muat riwayat data dari penyimpanan lokal
+                    const savedRows = localStorage.getItem('salesAppRows');
+                    if (savedRows) rows.value = JSON.parse(savedRows);
+                });
+
+                // FUNGSI LOGIN VIA FIREBASE
+                const handleLogin = () => {
+                    if (!loginForm.email || !loginForm.password) {
+                        alert('Silakan masukkan Email dan Password Anda.');
+                        return;
+                    }
+
+                    isLoading.value = true;
+                    loadingMessage.value = "Memverifikasi Kredensial...";
+                    
+                    signInWithEmailAndPassword(auth, loginForm.email.trim(), loginForm.password)
+                        .then(() => {
+                            isLoading.value = false;
+                            // Status isLoggedIn diubah otomatis oleh onAuthStateChanged
+                        })
+                        .catch((error) => {
+                            isLoading.value = false;
+                            alert('Akses Ditolak! Periksa kembali Email dan Password Anda.\n(Server Error: ' + error.code + ')');
+                        });
+                };
+
+                const handleLogout = () => { 
+                    if(confirm('Yakin ingin keluar?')) { 
+                        signOut(auth).then(() => {
+                            isLoggedIn.value = false; 
+                            loginForm.email = ''; 
+                            loginForm.password = ''; 
+                            rows.value = [];
+                        });
+                    } 
+                };
+
+                const toggleTheme = () => { isDark.value = !isDark.value; if (isDark.value) { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; } else { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; } };
+                
+                const openSettings = () => { showSettings.value = true; };
+                const saveSettings = () => { showSettings.value = false; };
+
+                // ----------------------------------------------------
+                // FUNGSI UPLOAD DATA KE CLOUD
+                // ----------------------------------------------------
+                const uploadToCloud = (dataToUpload, isEditMode = false) => {
+                    if (!dataToUpload || dataToUpload.length === 0) return;
+                    
+                    isLoading.value = true;
+                    loadingMessage.value = isEditMode ? "Mengupdate ke Google Sheet..." : "Mengirim ke Google Sheet...";
+
+                    const r = dataToUpload[0];
+                    const payload = {
+                        action: 'write',
+                        data: {
+                            id: r.id.toString(),
+                            date: formatDateID(r.date),
+                            salesName: isEditMode ? (r.salesName || header.salesName) : header.salesName, 
+                            unit: isEditMode ? (r.unit || header.unit) : header.unit,
+                            city: r.city, 
+                            customer: r.customer, 
+                            plateNo: r.plateNo || '-',
+                            fuelVol: r.fuelVol, 
+                            fuelKm: r.fuelKm,
+                            costFuel: parseVal(r.costFuel), 
+                            costParking: parseVal(r.costParking), 
+                            costToll: r.costToll,
+                            costMaintenance: parseVal(r.costMaintenance), 
+                            costPublicTransport: parseVal(r.costPublicTransport),
+                            costMeal: parseVal(r.costMeal), 
+                            costHotel: parseVal(r.costHotel), 
+                            costDriver: parseVal(r.costDriver),
+                            costEntertain: parseVal(r.costEntertain), 
+                            costOther: r.costOther, 
+                            total: r.total,
+                            originalTollList: r.originalTollList,
+                            originalOtherList: r.originalOtherList
+                        }
+                    };
+
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        isLoading.value = false;
+                        if (result && result.status === 'success') {
+                            alert("Berhasil!\n" + result.message);
+                            syncData(); // Refresh Data dari cloud setelah berhasil simpan
+                        } else {
+                            alert("Gagal dari server:\n" + (result ? result.message : 'Unknown Error'));
+                        }
+                    })
+                    .catch(error => {
+                        isLoading.value = false;
+                        console.error('Error detail:', error);
+                        alert("Gagal Terhubung ke Google Sheet.\nPastikan Internet Anda menyala dan stabil.");
+                    });
+                };
+
+                // ----------------------------------------------------
+                // VALIDASI LOGIC (KHUSUS ADMIN & KASIR)
+                // ----------------------------------------------------
+                const showValidationModal = ref(false);
+                const selectedRow = ref({});
+
+                const openValidationModal = (row) => { selectedRow.value = row; showValidationModal.value = true; };
+                
+                const submitValidation = (newStatus) => {
+                    isLoading.value = true; loadingMessage.value = "Mengubah Status...";
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST', body: JSON.stringify({ action: 'validate', id: selectedRow.value.id, newStatus: newStatus })
+                    })
+                    .then(res => res.json())
+                    .then(result => { isLoading.value = false; showValidationModal.value = false; syncData(); })
+                    .catch(err => { isLoading.value = false; alert("Gagal update status."); });
+                };
+
+                const showForm = ref(false);
+                const isEditing = ref(false);
+                const editingId = ref(null);
+                
+                const form = reactive({ date: new Date().toISOString().split('T')[0], city: '', fuelVol: '', fuelKm: '', costFuel: '', costParking: '', costMaintenance: '', costPublicTransport: '', costMeal: '', costHotel: '', costDriver: '', costEntertain: '', plateNo: '', customer: '' });
+                const tollList = ref([{ name: '', cost: '' }]); const otherList = ref([{ name: '', cost: '' }]); 
+                const costFields = { costParking: 'Parkir', costMaintenance: 'Perbaikan Mobil', costPublicTransport: 'Trans. Umum', costMeal: 'Uang Makan', costHotel: 'Hotel', costDriver: 'Extra Supir', costEntertain: 'Entertain' };
+
+                const parseVal = (val) => { if (!val) return 0; if (typeof val === 'number') return val; return parseInt(val.replace(/\./g, '')) || 0; };
+                const formatVal = (num) => { if (!num && num !== 0) return ''; return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+                const formatDateID = (dateString) => { if (!dateString) return ''; const [y, m, d] = dateString.split('-'); return `${d}/${m}/${y}`; };
+                const formatInput = (e, key) => { form[key] = formatVal(e.target.value.replace(/\D/g, '')); };
+                const formatHeaderKasbon = (e) => { header.kasbon = formatVal(e.target.value.replace(/\D/g, '')); };
+                const formatTollInput = (e, index) => { tollList.value[index].cost = formatVal(e.target.value.replace(/\D/g, '')); };
+                const formatOtherInput = (e, index) => { otherList.value[index].cost = formatVal(e.target.value.replace(/\D/g, '')); };
+
+                const totalTollCost = computed(() => tollList.value.reduce((sum, item) => sum + parseVal(item.cost), 0));
+                const totalOtherCost = computed(() => otherList.value.reduce((sum, item) => sum + parseVal(item.cost), 0));
+                const currentFormTotal = computed(() => parseVal(form.costFuel) + totalTollCost.value + totalOtherCost.value + (form.costParking ? parseVal(form.costParking) : 0) + Object.keys(costFields).filter(k => k !== 'costParking').reduce((sum, k) => sum + parseVal(form[k]), 0));
+                const grandTotal = computed(() => filteredRows.value.reduce((sum, row) => sum + row.total, 0));
+                const balance = computed(() => parseVal(header.kasbon) - grandTotal.value);
+                const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
+
+                const getSummaryString = (row) => {
+                    const parts = [];
+                    const add = (val, label) => { const v = parseVal(val); if (v > 0) parts.push(`${label} ${formatCurrency(v)}`); };
+                    add(row.costFuel, 'BBM'); add(row.costParking, 'Parkir'); add(row.costToll, 'Tol');
+                    add(row.costMaintenance, 'Perbaikan'); add(row.costPublicTransport, 'Trans. Umum');
+                    add(row.costMeal, 'Makan'); add(row.costHotel, 'Hotel'); add(row.costDriver, 'Supir');
+                    add(row.costEntertain, 'Entertain'); add(row.costOther, 'Lain-lain');
+                    return parts.length > 0 ? parts.join(', ') : '-';
+                };
+
+                const resetReport = () => { if (confirm('⚠️ Reset Laporan: Hapus semua riwayat transaksi dari memori HP?')) { rows.value = []; localStorage.removeItem('salesAppRows'); header.kasbon = ''; } };
+                const addToll = () => tollList.value.push({ name: '', cost: '' });
+                const removeToll = (i) => tollList.value.splice(i, 1);
+                const addOther = () => otherList.value.push({ name: '', cost: '' });
+                const removeOther = (i) => otherList.value.splice(i, 1);
+                
+                const openForm = () => { isEditing.value = false; editingId.value = null; resetForm(); showForm.value = true; };
+                const requestDelete = (id) => { deleteType.value = 'single'; deleteTargetId.value = id; showDeleteModal.value = true; };
+                const confirmClear = () => { deleteType.value = 'all'; showDeleteModal.value = true; };
+                const executeDelete = () => { 
+                    if (deleteType.value === 'all') {
+                        if (filterDateStart.value || filterDateEnd.value) { rows.value = rows.value.filter(row => !filteredRows.value.includes(row)); } else { rows.value = []; }
+                    } else { const index = rows.value.findIndex(r => r.id === deleteTargetId.value); if (index !== -1) rows.value.splice(index, 1); } 
+                    showDeleteModal.value = false; 
+                };
+                
+                const editRow = (row) => { 
+                    isEditing.value = true; editingId.value = row.id; 
+                    Object.keys(form).forEach(k => form[k] = row[k]); 
+                    form.date = row.rawDate || row.date; 
+                    form.costParking = row.costParking; form.plateNo = row.plateNo || ''; form.customer = row.customer; 
+                    tollList.value = JSON.parse(JSON.stringify(row.originalTollList || [])); 
+                    otherList.value = JSON.parse(JSON.stringify(row.originalOtherList || [])); 
+                    showForm.value = true; 
+                };
+                
+                const resetForm = () => { 
+                    form.city = ''; form.fuelVol = ''; form.fuelKm = ''; form.costFuel = ''; form.costParking = ''; form.plateNo = ''; form.customer = '';
+                    Object.keys(costFields).forEach(k => form[k] = ''); 
+                    tollList.value = [{ name: '', cost: '' }]; otherList.value = [{ name: '', cost: '' }]; 
+                };
+
+                const saveEntry = () => {
+                    if (!form.city.trim()) { alert("Kota Tujuan wajib diisi!"); return; }
+                    
+                    const existingRow = isEditing.value ? rows.value.find(r => r.id === editingId.value) : null;
+                    
+                    const rowData = { 
+                        ...form, 
+                        id: isEditing.value ? editingId.value : Date.now(), 
+                        customer: form.customer || '-', costToll: totalTollCost.value, costOther: totalOtherCost.value, total: currentFormTotal.value, 
+                        plateNo: form.plateNo || '-', originalTollList: JSON.parse(JSON.stringify(tollList.value)), originalOtherList: JSON.parse(JSON.stringify(otherList.value)),
+                        rawDate: form.date,
+                        salesName: isEditing.value ? (existingRow?.salesName || header.salesName) : header.salesName,
+                        unit: isEditing.value ? (existingRow?.unit || header.unit) : header.unit,
+                        status: 'Pending'
+                    };
+                    
+                    if (isEditing.value) { 
+                        const idx = rows.value.findIndex(r => r.id === editingId.value); 
+                        if (idx !== -1) rows.value[idx] = rowData; 
+                    } else { 
+                        rows.value.unshift(rowData); 
+                    }
+                    
+                    uploadToCloud([rowData], isEditing.value);
+                    showForm.value = false; 
+                    resetForm();
+                };
+
+                const exportAction = (type) => {
+                    const dataToExport = [...filteredRows.value].sort((a, b) => new Date(a.date) - new Date(b.date));
+                    
+                    if (dataToExport.length === 0) { alert("Data (terfilter) kosong!"); return; }
+                    const fileName = `Laporan Biaya Ops_${header.salesName || 'Karyawan'}_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}`;
+                    let sumVol = 0, sumFuel = 0, sumParking = 0, sumToll = 0, sumMaint = 0, sumTrans = 0, sumMeal = 0, sumHotel = 0, sumDriver = 0, sumEntertain = 0, sumOther = 0;
+                    
+                    const getTollString = (r, separator = '\n') => {
+                        if (parseVal(r.costToll) <= 0) return '';
+                        const details = r.originalTollList?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
+                        return details ? `${details}${separator}Total: ${formatVal(r.costToll)}` : formatVal(r.costToll);
+                    };
+                    const getOtherString = (r, separator = '\n') => {
+                        if (parseVal(r.costOther) <= 0) return '';
+                        const details = r.originalOtherList?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
+                        return details ? `${details}${separator}Total: ${formatVal(r.costOther)}` : formatVal(r.costOther);
+                    };
+
+                    dataToExport.forEach(r => { sumVol += parseFloat(r.fuelVol) || 0; sumFuel += parseVal(r.costFuel); sumParking += parseVal(r.costParking); sumToll += r.costToll; sumMaint += parseVal(r.costMaintenance); sumTrans += parseVal(r.costPublicTransport); sumMeal += parseVal(r.costMeal); sumHotel += parseVal(r.costHotel); sumDriver += parseVal(r.costDriver); sumEntertain += parseVal(r.costEntertain); sumOther += r.costOther; });
+
+                    if (type === 'pdf') {
+                        if (!window.jspdf) { alert("Library PDF belum siap!"); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape');
+                        doc.setFontSize(16); doc.setTextColor(0); doc.setFont(undefined, 'bold'); doc.text("LAPORAN BIAYA OPERASIONAL", 14, 20); doc.setFontSize(10); doc.setFont(undefined, 'normal');
+                        doc.text(`NAMA : ${header.salesName || '-'}`, 14, 30); doc.text(`UNIT : ${header.unit || '-'}`, 14, 35);
+
+                        const tableHeaders = [
+                            [
+                                { content: 'No.', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Tgl.', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Kota Tujuan', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Customer', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'BBM', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold' } },
+                                { content: 'Parkir', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Tol', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Perbaikan Mobil', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Trans. Umum', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Uang Makan', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Hotel', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Extra Supir', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Entertain', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Lain-lain', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+                                { content: 'Jumlah', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } }
+                            ],
+                            ['Vol.', 'Km', 'Rp.']
+                        ];
+
+                        const tableBody = [];
+                        dataToExport.forEach((r, i) => {
+                            tableBody.push([
+                                { content: i + 1, rowSpan: 2, styles: { halign: 'center' } },
+                                { content: formatDateID(r.date), rowSpan: 2, styles: { halign: 'center' } },
+                                { content: r.city, rowSpan: 2, styles: { halign: 'left' } },
+                                { content: r.customer, rowSpan: 2, styles: { halign: 'left' } },
+                                { content: r.plateNo || '-', colSpan: 3, styles: { halign: 'center', fillColor: [250, 250, 250], fontSize: 7, fontStyle: 'bold', cellPadding: 0.5 } }, 
+                                { content: r.costParking, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: getTollString(r), rowSpan: 2, styles: { halign: 'left' } },
+                                { content: r.costMaintenance, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: r.costPublicTransport, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: r.costMeal, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: r.costHotel, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: r.costDriver, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: r.costEntertain, rowSpan: 2, styles: { halign: 'right' } },
+                                { content: getOtherString(r), rowSpan: 2, styles: { halign: 'left' } },
+                                { content: formatVal(r.total), rowSpan: 2, styles: { halign: 'right' } }
+                            ]);
+                            tableBody.push([
+                                { content: r.fuelVol, styles: { halign: 'center' } },
+                                { content: r.fuelKm, styles: { halign: 'center' } },
+                                { content: r.costFuel, styles: { halign: 'right' } }
+                            ]);
+                        });
+
+                        doc.autoTable({
+                            head: tableHeaders,
+                            body: tableBody,
+                            startY: 40,
+                            theme: 'plain',
+                            styles: { fontSize: 7, lineColor: [0, 0, 0], lineWidth: 0.1, valign: 'middle' },
+                            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', lineWidth: 0.1 },
+                            columnStyles: { 0: { halign: 'center', cellWidth: 10 }, 3: { cellWidth: 26 }, 6: { cellWidth: 16 }, 8: { cellWidth: 26 }, 9: { cellWidth: 14 }, 10: { cellWidth: 14 }, 13: { cellWidth: 16 } },
+                            foot: [[
+                                { content: 'TOTAL', colSpan: 4, styles: { halign: 'center', fontStyle: 'bold' } }, 
+                                sumVol.toFixed(1).replace('.', ','), "", formatVal(sumFuel), formatVal(sumParking), formatVal(sumToll), formatVal(sumMaint), formatVal(sumTrans), formatVal(sumMeal), formatVal(sumHotel), formatVal(sumDriver), formatVal(sumEntertain), formatVal(sumOther), formatVal(grandTotal.value)
+                            ]], 
+                            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'right' } 
+                        });
+                        
+                        const finalY = doc.lastAutoTable.finalY + 10; doc.text("Total yang telah dikeluarkan", 180, finalY + 5); doc.text(":", 230, finalY + 5); doc.text(formatCurrency(grandTotal.value), 260, finalY + 5, { align: 'right' }); doc.text("Kasbon", 180, finalY + 10); doc.text(":", 230, finalY + 10); doc.text(formatCurrency(parseVal(header.kasbon)), 260, finalY + 10, { align: 'right' }); doc.text("Sisa lebih / kurang", 180, finalY + 15); doc.text(":", 230, finalY + 15); doc.text(formatCurrency(balance.value), 260, finalY + 15, { align: 'right' }); 
+                        
+                        const sigY = finalY + 35;
+                        const printDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                        doc.setFont(undefined, 'normal');
+                        doc.text(`Kudus, ${printDateStr}`, 240, sigY, { align: 'center' });
+                        doc.text("Dibuat Oleh,", 240, sigY + 5, { align: 'center' });
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`( ${header.salesName || 'Karyawan'} )`, 240, sigY + 25, { align: 'center' });
+
+                        doc.save(`${fileName}.pdf`);
+                    
+                    } else if (type === 'image') {
+                        if (!window.html2canvas) { alert("Library Gambar belum siap!"); return; }
+                        document.getElementById('print-name').innerText = header.salesName || '-'; document.getElementById('print-unit').innerText = header.unit || '-';
+                        const tbody = document.getElementById('print-body'); tbody.innerHTML = '';
+                        const makeCell = (val) => `<div class="acc-cell"><span>Rp</span><span>${val}</span></div>`;
+                        const thead = document.querySelector('#print-area thead');
+                        thead.innerHTML = `
+                            <tr class="bg-white text-black text-center font-bold">
+                                <th class="border border-black p-2 w-10" rowspan="2">No.</th><th class="border border-black p-2 w-20" rowspan="2">Tgl.</th><th class="border border-black p-2" rowspan="2">Kota Tujuan</th><th class="border border-black p-2 w-48" rowspan="2">Customer</th><th class="border border-black p-2" colspan="3">BBM</th><th class="border border-black p-2 w-24" rowspan="2">Parkir</th><th class="border border-black p-2 w-48" rowspan="2">Tol</th><th class="border border-black p-2 w-20" rowspan="2">Perbaikan Mobil</th><th class="border border-black p-2 w-20" rowspan="2">Transportasi Umum</th><th class="border border-black p-2 w-24" rowspan="2">Uang Makan</th><th class="border border-black p-2 w-24" rowspan="2">Hotel</th><th class="border border-black p-2 w-16" rowspan="2">Extra Supir</th><th class="border border-black p-2 w-24" rowspan="2">Entertain</th><th class="border border-black p-2 w-32" rowspan="2">Lain-lain</th><th class="border border-black p-2 w-28" rowspan="2">Jumlah</th>
+                            </tr>
+                            <tr class="bg-white text-black text-center font-bold">
+                                <th class="border border-black p-1 w-12">Vol.</th><th class="border border-black p-1 w-16">Km.</th><th class="border border-black p-1 w-20">Rp.</th>
+                            </tr>
+                        `;
+
+                        dataToExport.forEach((r, i) => {
+                            const tollString = getTollString(r, '<br>'); const otherString = getOtherString(r, '<br>');
+                            let rowHTML = `
+                                <tr class="text-center border border-gray-400">
+                                    <td class="border border-gray-400 p-2 text-center" rowspan="2">${i+1}</td><td class="border border-gray-400 p-2 text-center" rowspan="2">${formatDateID(r.date)}</td><td class="border border-gray-400 p-2 text-left" rowspan="2">${r.city}</td><td class="border border-gray-400 p-2 text-left" rowspan="2">${r.customer}</td><td class="border border-gray-400 p-0 text-[9px] font-bold bg-gray-50 h-4 align-middle" colspan="3">${r.plateNo || '-'}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costParking)}</td><td class="border border-gray-400 p-2 text-left text-[10px]" rowspan="2">${tollString}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costMaintenance)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costPublicTransport)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costMeal)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costHotel)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costDriver)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costEntertain)}</td><td class="border border-gray-400 p-2 text-left text-[10px]" rowspan="2">${otherString}</td><td class="border border-gray-400 p-2 font-bold" rowspan="2">${makeCell(formatVal(r.total))}</td>
+                                </tr>
+                                <tr class="text-center border border-gray-400">
+                                    <td class="border border-gray-400 p-2">${r.fuelVol || '-'}</td><td class="border border-gray-400 p-2">${r.fuelKm || '-'}</td><td class="border border-gray-400 p-2">${makeCell(r.costFuel)}</td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += rowHTML;
+                        });
+
+                        const footerRow = `<td class="border border-black p-2 font-bold bg-gray-100 text-center" colspan="4">TOTAL</td><td class="border border-black p-2 font-bold bg-gray-100">${sumVol.toFixed(1).replace('.', ',')}</td><td class="border border-black p-2 font-bold bg-gray-100"></td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumFuel))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumParking))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumToll))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumMaint))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumTrans))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumMeal))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumHotel))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumDriver))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumEntertain))}</td><td class="border border-black p-2 font-bold bg-gray-100">${makeCell(formatVal(sumOther))}</td><td class="border border-black p-2 font-bold bg-gray-100 text-right">${makeCell(formatVal(grandTotal.value))}</td>`;
+                        document.getElementById('print-footer-row').innerHTML = footerRow;
+                        document.getElementById('print-total').innerHTML = makeCell(formatVal(grandTotal.value));
+                        document.getElementById('print-kasbon').innerHTML = makeCell(header.kasbon || '0');
+                        document.getElementById('print-balance').innerHTML = makeCell(formatVal(balance.value));
+                        
+                        document.getElementById('print-sig-date').innerText = `Kudus, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                        document.getElementById('print-sig-name').innerText = `( ${header.salesName || 'Karyawan'} )`;
+
+                        document.getElementById('print-area').style.visibility = "visible";
+                        html2canvas(document.getElementById('print-area')).then(canvas => { document.getElementById('print-area').style.visibility = "hidden"; const link = document.createElement('a'); link.download = `${fileName}.jpg`; link.href = canvas.toDataURL('image/jpeg', 1.0); link.click(); });
+                    } else if (type === 'excel') {
+                        alert("Silahkan gunakan fitur Export PDF atau Image sebagai bukti resmi.");
+                    }
+                };
+
+                return { isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, tollList, otherList, costFields, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
