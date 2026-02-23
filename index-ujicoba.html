@@ -128,7 +128,6 @@
                 <tr><td colspan="14"></td><td colspan="2" class="text-left font-medium py-1">Kasbon</td><td class="text-left font-medium py-1 px-2">:</td><td class="text-right font-bold py-1 px-2" id="print-kasbon"></td></tr>
                 <tr><td colspan="14"></td><td colspan="2" class="text-left font-medium py-1">Sisa lebih / kurang</td><td class="text-left font-medium py-1 px-2">:</td><td class="text-right font-bold py-1 px-2" id="print-balance"></td></tr>
                 
-                <!-- TAMBAHAN KOLOM TANDA TANGAN (Untuk mode Cetak Gambar) -->
                 <tr><td colspan="17" class="h-8"></td></tr>
                 <tr><td colspan="14"></td><td colspan="3" class="text-center font-medium py-1" id="print-sig-date"></td></tr>
                 <tr><td colspan="14"></td><td colspan="3" class="text-center font-medium py-1">Dibuat Oleh,</td></tr>
@@ -202,25 +201,30 @@
                     <div>
                         <h1 class="font-bold text-lg font-figtree">Biaya Operasional</h1>
                         <div class="flex items-center gap-1 opacity-90 mt-0.5">
-                            <!-- Indikator Role Karyawan -->
+                            <!-- Indikator Role -->
                             <span v-if="currentUser.role === 'admin'" class="bg-red-500 text-white px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">Admin</span>
                             <span v-if="currentUser.role === 'kasir'" class="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">Kasir</span>
                             <div v-if="currentUser.role === 'karyawan'" class="w-2 h-2 rounded-full animate-pulse bg-green-400"></div>
                             <p class="text-xs font-light">{{ currentUser.name || 'Memuat Profil...' }}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        
+                        <!-- TOMBOL NOTIFIKASI (Hanya untuk Admin/Kasir) -->
+                        <button v-if="currentUser.role === 'admin' || currentUser.role === 'kasir'" @click="showNotifModal = true" class="relative p-2 rounded-full bg-emerald-800/40 hover:bg-emerald-600 transition" title="Notifikasi Laporan Baru">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            <span v-if="unreadCount > 0" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 border-2 border-emerald-700 rounded-full animate-bounce">{{ unreadCount }}</span>
+                        </button>
+
                         <!-- Tombol Sync Cloud -->
                         <button @click="syncData" class="p-2 rounded-full bg-blue-500/80 hover:bg-blue-600 transition flex items-center gap-1" title="Tarik/Sinkronisasi Cloud">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         </button>
 
-                        <button @click="openSettings" class="p-2 rounded-full bg-emerald-800/40 hover:bg-emerald-600 transition" title="Info Sistem">
+                        <button @click="openSettings" class="p-2 rounded-full bg-emerald-800/40 hover:bg-emerald-600 transition hidden sm:block" title="Info Sistem">
                             <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </button>
-                        <button v-if="currentUser.role === 'karyawan'" @click="resetReport" class="flex items-center gap-1.5 bg-emerald-800/40 hover:bg-red-500/90 text-white border border-emerald-600/30 px-3 py-1.5 rounded-lg transition active:scale-95 shadow-sm" title="Hapus Riwayat">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
+                        
                         <button @click="toggleTheme" class="p-2 rounded-full bg-emerald-800/40 hover:bg-emerald-600 transition">
                             <svg v-if="isDark" class="w-5 h-5 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                             <svg v-else class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -238,12 +242,12 @@
                         <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
                             <svg class="w-24 h-24 text-emerald-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                         </div>
-                        <h2 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700 pb-2">Profil Karyawan</h2>
+                        <h2 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700 pb-2">Profil {{ currentUser.role === 'karyawan' ? 'Karyawan' : 'Pengguna' }}</h2>
                         
                         <div class="grid grid-cols-1 gap-4 relative">
                             <!-- Nama Karyawan (Terkunci) -->
                             <div class="relative">
-                                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Nama {{ currentUser.role === 'karyawan' ? 'Karyawan' : 'Pengguna' }}</label>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Nama (Otomatis)</label>
                                 <div class="relative group">
                                     <span class="absolute left-4 top-3.5 text-emerald-500">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -280,33 +284,70 @@
                     <!-- DASHBOARD -->
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border-l-4 border-orange-400 dark:border-orange-500">
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase">{{ currentUser.role === 'karyawan' ? 'Total Biaya (Terfilter)' : 'Total Seluruh Data' }}</p>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase">{{ currentUser.role === 'karyawan' ? 'Total Biaya (Terfilter)' : 'Total Seluruh Data (Terfilter)' }}</p>
                             <p class="text-lg sm:text-2xl font-bold text-gray-800 dark:text-white mt-1 truncate">{{ formatCurrency(grandTotal) }}</p>
                         </div>
                         <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border-l-4" :class="balance >= 0 ? 'border-emerald-500' : 'border-red-500'">
                             <p class="text-[10px] font-bold uppercase" :class="balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">
-                                {{ currentUser.role !== 'karyawan' ? 'Status' : (balance >= 0 ? 'Sisa Kasbon' : 'Kurang') }}
+                                {{ currentUser.role !== 'karyawan' ? 'Status Laporan' : (balance >= 0 ? 'Sisa Kasbon' : 'Kurang') }}
                             </p>
                             <p v-if="currentUser.role === 'karyawan'" class="text-lg sm:text-2xl font-bold mt-1 truncate" :class="balance >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'">
                                 {{ formatCurrency(Math.abs(balance)) }}
                             </p>
-                            <p v-else class="text-xs font-bold mt-2 text-blue-600 dark:text-blue-400">Sync Cloud Aktif</p>
+                            <p v-else class="text-[10px] font-bold mt-2 text-blue-600 dark:text-blue-400 flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Cloud Auto-Sync Aktif</p>
                         </div>
                     </div>
 
-                    <!-- FILTER TANGGAL -->
-                    <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                        <h3 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-3">Filter Periode</h3>
-                        <div class="flex gap-3 items-end">
+                    <!-- FILTER & PENCARIAN -->
+                    <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-3">
+                        <h3 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700 pb-2">Filter & Pencarian</h3>
+                        
+                        <!-- Kolom Search -->
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-gray-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </span>
+                            <input 
+                                type="text" 
+                                v-model="searchQuery" 
+                                :placeholder="currentUser.role === 'karyawan' ? 'Cari kota atau customer...' : 'Cari nama karyawan, kota...'" 
+                                class="w-full pl-10 p-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 transition placeholder-gray-400"
+                            >
+                        </div>
+
+                        <!-- Dropdown Filter: Status & Karyawan -->
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="text-[10px] text-gray-400 font-bold block mb-1">Status Validasi</label>
+                                <select v-model="filterStatus" class="w-full p-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Semua Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Disetujui">Disetujui</option>
+                                    <option value="Ditolak">Ditolak</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Hanya Tampil untuk Admin/Kasir -->
+                            <div v-if="currentUser.role === 'admin' || currentUser.role === 'kasir'">
+                                <label class="text-[10px] text-gray-400 font-bold block mb-1">Karyawan</label>
+                                <select v-model="filterKaryawan" class="w-full p-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Semua Karyawan</option>
+                                    <option v-for="name in uniqueKaryawanList" :key="name" :value="name">{{ name }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Kolom Tanggal -->
+                        <div class="flex gap-3 items-end pt-1">
                             <div class="flex-1">
                                 <label class="text-[10px] text-gray-400 font-bold block mb-1">Dari Tanggal</label>
-                                <input type="date" v-model="filterDateStart" class="w-full p-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-dark-900 dark:text-white">
+                                <input type="date" v-model="filterDateStart" class="w-full p-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                             <div class="flex-1">
                                 <label class="text-[10px] text-gray-400 font-bold block mb-1">Sampai Tanggal</label>
-                                <input type="date" v-model="filterDateEnd" class="w-full p-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-dark-900 dark:text-white">
+                                <input type="date" v-model="filterDateEnd" class="w-full p-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
-                            <button @click="resetFilter" class="p-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-lg hover:bg-gray-200 transition" title="Reset Filter">
+                            <button @click="resetFilter" class="p-2.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-xl hover:bg-gray-200 transition" title="Reset Semua Filter">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             </button>
                         </div>
@@ -321,7 +362,7 @@
 
                         <div v-if="filteredRows.length === 0" class="flex flex-col items-center justify-center py-12 bg-white dark:bg-dark-800 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600 text-center opacity-60">
                             <svg class="w-16 h-16 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
-                            <p class="text-gray-500 dark:text-gray-400 font-medium">Belum ada data {{ filterDateStart || filterDateEnd ? 'di periode ini' : '' }}</p>
+                            <p class="text-gray-500 dark:text-gray-400 font-medium">Belum ada data yang sesuai dengan pencarian/filter.</p>
                         </div>
 
                         <div v-else class="space-y-3">
@@ -334,7 +375,7 @@
                                                 <h4 class="font-bold text-gray-800 dark:text-gray-100">{{ row.city }}</h4>
                                                 <span :class="['status-badge', 'status-' + (row.status || 'Pending')]">{{ row.status || 'Pending' }}</span>
                                             </div>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDateID(row.date) }} <span v-if="currentUser.role !== 'karyawan'">• {{ row.salesName }}</span></p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ formatDateID(row.date) }} <span v-if="currentUser.role !== 'karyawan'">• <b class="text-emerald-600 dark:text-emerald-400">{{ row.salesName }}</b></span></p>
                                         </div>
                                         <span class="font-bold text-emerald-600 dark:text-emerald-400 text-lg">{{ formatCurrency(row.total) }}</span>
                                     </div>
@@ -391,6 +432,42 @@
             </div>
         </transition>
 
+        <!-- MODAL NOTIFIKASI -->
+        <div v-if="showNotifModal" class="fixed inset-0 z-[60] flex items-start justify-center bg-black/50 backdrop-blur-sm p-4 pt-20">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-zoom flex flex-col max-h-[80vh]">
+                <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-dark-900">
+                    <h3 class="text-sm font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <span>🔔</span> Notifikasi Baru
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <button v-if="notifications.length > 0" @click="markAllNotifRead" class="text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition">Tandai Dibaca</button>
+                        <button @click="showNotifModal = false" class="bg-gray-200 dark:bg-gray-700 p-1.5 rounded-full text-gray-500 hover:bg-gray-300 transition">✕</button>
+                    </div>
+                </div>
+                
+                <div class="overflow-y-auto custom-scroll flex-1 p-2">
+                    <div v-if="notifications.length === 0" class="p-8 text-center text-gray-400 text-sm">
+                        Tidak ada notifikasi baru.
+                    </div>
+                    <div v-else class="space-y-1">
+                        <div v-for="notif in notifications" :key="notif.id" 
+                             @click="openFromNotif(notif)" 
+                             class="p-3 rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-gray-700 cursor-pointer transition flex gap-3 items-start"
+                             :class="notif.read ? 'opacity-60 bg-transparent' : 'bg-emerald-50 dark:bg-emerald-900/10'">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" :class="notif.read ? 'bg-gray-200 text-gray-500' : 'bg-emerald-200 text-emerald-700'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs font-bold text-gray-800 dark:text-gray-100">{{ notif.message }}</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5">{{ notif.city }} • {{ formatDateID(notif.date) }}</p>
+                            </div>
+                            <div v-if="!notif.read" class="w-2 h-2 rounded-full bg-red-500 mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL INFO / SETTINGS -->
         <div v-if="showSettings" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-zoom">
@@ -435,7 +512,7 @@
                 <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Tanggal</label><input type="date" v-model="form.date" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white"></div>
-                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Kota</label><input type="text" v-model="form.city" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white" placeholder="Kota"></div>
+                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Kota</label><input type="text" v-model="form.city" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white" placeholder="Kota Tujuan"></div>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</label>
@@ -588,8 +665,16 @@
                 const loadingMessage = ref('Memproses...');
                 const showSettings = ref(false);
                 
+                // STATE UNTUK PENCARIAN & FILTER
                 const filterDateStart = ref('');
                 const filterDateEnd = ref('');
+                const filterStatus = ref('');
+                const filterKaryawan = ref('');
+                const searchQuery = ref('');
+
+                // STATE NOTIFIKASI
+                const notifications = ref([]);
+                const showNotifModal = ref(false);
 
                 const isLoggedIn = ref(false);
                 const loginForm = reactive({ email: '', password: '' });
@@ -604,22 +689,138 @@
                     localStorage.setItem('salesAppRows', JSON.stringify(newVal));
                 }, { deep: true });
 
-                const filteredRows = computed(() => {
-                    if (!filterDateStart.value && !filterDateEnd.value) return rows.value;
-                    return rows.value.filter(row => {
-                        const rowDate = row.date; 
-                        const start = filterDateStart.value; const end = filterDateEnd.value;
-                        if (start && end) return rowDate >= start && rowDate <= end;
-                        if (start) return rowDate >= start;
-                        if (end) return rowDate <= end;
-                        return true;
-                    });
+                watch(notifications, (newVal) => {
+                    localStorage.setItem('salesAppNotifs', JSON.stringify(newVal));
+                }, { deep: true });
+
+                // MENDAPATKAN DAFTAR NAMA KARYAWAN DARI DATA (Untuk Dropdown Admin)
+                const uniqueKaryawanList = computed(() => {
+                    const names = rows.value.map(r => r.salesName).filter(Boolean);
+                    return [...new Set(names)].sort();
                 });
 
-                const resetFilter = () => { filterDateStart.value = ''; filterDateEnd.value = ''; };
+                // JUMLAH NOTIFIKASI BELUM DIBACA
+                const unreadCount = computed(() => notifications.value.filter(n => !n.read).length);
+
+                // COMPUTED PENCARIAN DAN FILTER
+                const filteredRows = computed(() => {
+                    let result = rows.value;
+
+                    if (filterDateStart.value || filterDateEnd.value) {
+                        result = result.filter(row => {
+                            const rowDate = row.date; 
+                            const start = filterDateStart.value; 
+                            const end = filterDateEnd.value;
+                            if (start && end) return rowDate >= start && rowDate <= end;
+                            if (start) return rowDate >= start;
+                            if (end) return rowDate <= end;
+                            return true;
+                        });
+                    }
+
+                    if (filterStatus.value) {
+                        result = result.filter(r => (r.status || 'Pending') === filterStatus.value);
+                    }
+
+                    if (filterKaryawan.value) {
+                        result = result.filter(r => r.salesName === filterKaryawan.value);
+                    }
+
+                    if (searchQuery.value) {
+                        const q = searchQuery.value.toLowerCase();
+                        result = result.filter(row => {
+                            return (row.salesName && row.salesName.toLowerCase().includes(q)) ||
+                                   (row.city && row.city.toLowerCase().includes(q)) ||
+                                   (row.customer && row.customer.toLowerCase().includes(q));
+                        });
+                    }
+
+                    return result;
+                });
+
+                const resetFilter = () => { 
+                    filterDateStart.value = ''; 
+                    filterDateEnd.value = ''; 
+                    filterStatus.value = '';
+                    filterKaryawan.value = '';
+                    searchQuery.value = ''; 
+                };
 
                 // ----------------------------------------------------
-                // FUNGSI SINKRONISASI DATA DARI CLOUD
+                // FUNGSI NOTIFIKASI
+                // ----------------------------------------------------
+                let pollingInterval = null;
+                let isInitialLoad = true;
+
+                const checkNewEntries = (oldRows, newRows) => {
+                    const oldIds = new Set(oldRows.map(r => r.id));
+                    // Cari row baru (id belum ada di oldRows), berstatus pending, dan bukan milik sendiri
+                    const addedRows = newRows.filter(r => !oldIds.has(r.id) && (r.status || 'Pending') === 'Pending' && r.salesName !== currentUser.name);
+                    
+                    if (addedRows.length > 0) {
+                        addedRows.forEach(r => {
+                            notifications.value.unshift({
+                                id: Date.now() + Math.random(),
+                                rowId: r.id,
+                                message: `Laporan baru dari ${r.salesName}`,
+                                city: r.city,
+                                date: r.date,
+                                read: false
+                            });
+                        });
+                        
+                        // Coba berikan notifikasi browser jika diizinkan
+                        if (Notification.permission === "granted") {
+                            new Notification("Laporan Baru", { body: `Ada ${addedRows.length} laporan baru yang menunggu validasi.` });
+                        }
+                    }
+                };
+
+                const openFromNotif = (notif) => {
+                    notif.read = true;
+                    showNotifModal.value = false;
+                    const targetRow = rows.value.find(r => r.id === notif.rowId);
+                    if (targetRow) {
+                        openValidationModal(targetRow);
+                    } else {
+                        alert("Data laporan tidak ditemukan. Mungkin sudah dihapus atau divalidasi.");
+                    }
+                };
+
+                const markAllNotifRead = () => {
+                    notifications.value.forEach(n => n.read = true);
+                };
+
+                const silentSync = () => {
+                    if(!currentUser.email || isLoading.value) return;
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'read', email: currentUser.email, userName: currentUser.name, role: currentUser.role })
+                    })
+                    .then(res => res.json())
+                    .then(result => {
+                        if(result.status === 'success') {
+                            if (!isInitialLoad) checkNewEntries(rows.value, result.data);
+                            rows.value = result.data;
+                            isInitialLoad = false;
+                        }
+                    })
+                    .catch(err => console.error("Auto sync gagal", err));
+                };
+
+                const startPolling = () => {
+                    // Cek auto sync tiap 30 detik untuk admin/kasir
+                    if (currentUser.role === 'admin' || currentUser.role === 'kasir') {
+                        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                            Notification.requestPermission();
+                        }
+                        if (pollingInterval) clearInterval(pollingInterval);
+                        pollingInterval = setInterval(silentSync, 30000); 
+                    }
+                };
+
+                // ----------------------------------------------------
+                // FUNGSI SINKRONISASI DATA DARI CLOUD (Manual)
                 // ----------------------------------------------------
                 const syncData = () => {
                     if(!currentUser.email) return;
@@ -634,7 +835,9 @@
                     .then(result => {
                         isLoading.value = false;
                         if(result.status === 'success') {
+                            if (!isInitialLoad) checkNewEntries(rows.value, result.data);
                             rows.value = result.data;
+                            isInitialLoad = false;
                         } else {
                             alert("Gagal mengambil data dari server: " + result.message);
                         }
@@ -647,18 +850,20 @@
                 };
 
                 onMounted(() => {
-                    // Cek preferensi Dark Mode HP User
                     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                         isDark.value = true; document.documentElement.classList.add('dark');
                     }
 
-                    // Listener Firebase: Cek otomatis apakah user masih login
+                    const savedRows = localStorage.getItem('salesAppRows');
+                    if (savedRows) rows.value = JSON.parse(savedRows);
+
+                    const savedNotifs = localStorage.getItem('salesAppNotifs');
+                    if (savedNotifs) notifications.value = JSON.parse(savedNotifs);
+
                     onAuthStateChanged(auth, (user) => {
                         if (user) {
                             isLoggedIn.value = true;
                             const emailUser = user.email.toLowerCase();
-                            
-                            // Cocokkan email dengan Daftar Karyawan
                             const profil = daftarKaryawan[emailUser] || { nama: emailUser, unit: "Unit Tidak Terdaftar", role: "karyawan" };
                             
                             currentUser.name = profil.nama;
@@ -668,52 +873,34 @@
                             header.salesName = profil.nama;
                             header.unit = profil.unit;
 
-                            // Tarik data setelah berhasil login
+                            isInitialLoad = true;
                             syncData();
+                            startPolling(); // Mulai auto sync untuk notifikasi
                         } else {
                             isLoggedIn.value = false;
+                            if (pollingInterval) clearInterval(pollingInterval);
                         }
                     });
-
-                    // Muat riwayat data dari penyimpanan lokal
-                    const savedRows = localStorage.getItem('salesAppRows');
-                    if (savedRows) rows.value = JSON.parse(savedRows);
                 });
 
-                // FUNGSI LOGIN VIA FIREBASE
                 const handleLogin = () => {
-                    if (!loginForm.email || !loginForm.password) {
-                        alert('Silakan masukkan Email dan Password Anda.');
-                        return;
-                    }
-
-                    isLoading.value = true;
-                    loadingMessage.value = "Memverifikasi Kredensial...";
-                    
+                    if (!loginForm.email || !loginForm.password) { alert('Silakan masukkan Email dan Password Anda.'); return; }
+                    isLoading.value = true; loadingMessage.value = "Memverifikasi...";
                     signInWithEmailAndPassword(auth, loginForm.email.trim(), loginForm.password)
-                        .then(() => {
-                            isLoading.value = false;
-                            // Status isLoggedIn diubah otomatis oleh onAuthStateChanged
-                        })
-                        .catch((error) => {
-                            isLoading.value = false;
-                            alert('Akses Ditolak! Periksa kembali Email dan Password Anda.\n(Server Error: ' + error.code + ')');
-                        });
+                        .then(() => { isLoading.value = false; })
+                        .catch((error) => { isLoading.value = false; alert('Akses Ditolak! Periksa kembali Email dan Password Anda.\n(Server Error: ' + error.code + ')'); });
                 };
 
                 const handleLogout = () => { 
                     if(confirm('Yakin ingin keluar?')) { 
                         signOut(auth).then(() => {
-                            isLoggedIn.value = false; 
-                            loginForm.email = ''; 
-                            loginForm.password = ''; 
-                            rows.value = [];
+                            isLoggedIn.value = false; loginForm.email = ''; loginForm.password = ''; rows.value = [];
+                            if (pollingInterval) clearInterval(pollingInterval);
                         });
                     } 
                 };
 
                 const toggleTheme = () => { isDark.value = !isDark.value; if (isDark.value) { document.documentElement.classList.add('dark'); localStorage.theme = 'dark'; } else { document.documentElement.classList.remove('dark'); localStorage.theme = 'light'; } };
-                
                 const openSettings = () => { showSettings.value = true; };
                 const saveSettings = () => { showSettings.value = false; };
 
@@ -756,18 +943,16 @@
                     };
 
                     fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
+                        method: 'POST', body: JSON.stringify(payload)
                     })
                     .then(response => response.json())
                     .then(result => {
                         isLoading.value = false;
                         if (result && result.status === 'success') {
                             alert("Berhasil!\n" + result.message);
-                            syncData(); // Refresh Data dari cloud setelah berhasil simpan
-                        } else {
-                            alert("Gagal dari server:\n" + (result ? result.message : 'Unknown Error'));
-                        }
+                            isInitialLoad = true; // Mencegah notifikasi untuk pengirim
+                            syncData();
+                        } else { alert("Gagal dari server:\n" + (result ? result.message : 'Unknown Error')); }
                     })
                     .catch(error => {
                         isLoading.value = false;
@@ -790,7 +975,12 @@
                         method: 'POST', body: JSON.stringify({ action: 'validate', id: selectedRow.value.id, newStatus: newStatus })
                     })
                     .then(res => res.json())
-                    .then(result => { isLoading.value = false; showValidationModal.value = false; syncData(); })
+                    .then(result => { 
+                        isLoading.value = false; 
+                        showValidationModal.value = false; 
+                        isInitialLoad = true;
+                        syncData(); 
+                    })
                     .catch(err => { isLoading.value = false; alert("Gagal update status."); });
                 };
 
@@ -827,7 +1017,7 @@
                     return parts.length > 0 ? parts.join(', ') : '-';
                 };
 
-                const resetReport = () => { if (confirm('⚠️ Reset Laporan: Hapus semua riwayat transaksi dari memori HP?')) { rows.value = []; localStorage.removeItem('salesAppRows'); header.kasbon = ''; } };
+                const resetReport = () => { if (confirm('⚠️ Hapus riwayat dari memori perangkat ini?')) { rows.value = []; localStorage.removeItem('salesAppRows'); header.kasbon = ''; } };
                 const addToll = () => tollList.value.push({ name: '', cost: '' });
                 const removeToll = (i) => tollList.value.splice(i, 1);
                 const addOther = () => otherList.value.push({ name: '', cost: '' });
@@ -838,7 +1028,7 @@
                 const confirmClear = () => { deleteType.value = 'all'; showDeleteModal.value = true; };
                 const executeDelete = () => { 
                     if (deleteType.value === 'all') {
-                        if (filterDateStart.value || filterDateEnd.value) { rows.value = rows.value.filter(row => !filteredRows.value.includes(row)); } else { rows.value = []; }
+                        if (filterDateStart.value || filterDateEnd.value || searchQuery.value) { rows.value = rows.value.filter(row => !filteredRows.value.includes(row)); } else { rows.value = []; }
                     } else { const index = rows.value.findIndex(r => r.id === deleteTargetId.value); if (index !== -1) rows.value.splice(index, 1); } 
                     showDeleteModal.value = false; 
                 };
@@ -1030,7 +1220,7 @@
                     }
                 };
 
-                return { isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, tollList, otherList, costFields, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation };
+                return { isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, tollList, otherList, costFields, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filterStatus, filterKaryawan, searchQuery, uniqueKaryawanList, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation, showNotifModal, notifications, unreadCount, openFromNotif, markAllNotifRead };
             }
         }).mount('#app');
     </script>
