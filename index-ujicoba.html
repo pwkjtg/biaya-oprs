@@ -918,7 +918,7 @@
                         action: 'write',
                         data: {
                             id: r.id.toString(),
-                            date: formatDateID(r.date),
+                            date: r.date, // FIX: Kirim tanggal utuh YYYY-MM-DD ke Google Sheet
                             salesName: isEditMode ? (r.salesName || header.salesName) : header.salesName, 
                             unit: isEditMode ? (r.unit || header.unit) : header.unit,
                             city: r.city, 
@@ -994,7 +994,21 @@
 
                 const parseVal = (val) => { if (!val) return 0; if (typeof val === 'number') return val; return parseInt(val.replace(/\./g, '')) || 0; };
                 const formatVal = (num) => { if (!num && num !== 0) return ''; return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
-                const formatDateID = (dateString) => { if (!dateString) return ''; const [y, m, d] = dateString.split('-'); return `${d}/${m}/${y}`; };
+                
+                // FIX: Mencegah bug undefined/undefined/ dengan penyembuhan data otomatis
+                const formatDateID = (dateString) => { 
+                    if (!dateString) return ''; 
+                    let str = String(dateString);
+                    // Bersihkan jika ada undefined yang tersangkut dari cache lama
+                    if (str.includes('undefined')) str = str.replace(/undefined\//g, '');
+                    // Jika format sudah DD/MM/YYYY
+                    if (str.includes('/')) return str; 
+                    // Konversi YYYY-MM-DD ke DD/MM/YYYY
+                    const parts = str.split('T')[0].split('-'); 
+                    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; 
+                    return str; 
+                };
+
                 const formatInput = (e, key) => { form[key] = formatVal(e.target.value.replace(/\D/g, '')); };
                 const formatHeaderKasbon = (e) => { header.kasbon = formatVal(e.target.value.replace(/\D/g, '')); };
                 const formatTollInput = (e, index) => { tollList.value[index].cost = formatVal(e.target.value.replace(/\D/g, '')); };
@@ -1036,7 +1050,16 @@
                 const editRow = (row) => { 
                     isEditing.value = true; editingId.value = row.id; 
                     Object.keys(form).forEach(k => form[k] = row[k]); 
-                    form.date = row.rawDate || row.date; 
+                    
+                    // FIX: Perbaiki tanggal rusak jika terlanjur dimuat
+                    let d = row.rawDate || row.date; 
+                    if (d && String(d).includes('/')) {
+                        let clean = String(d).replace(/undefined\//g, '');
+                        const p = clean.split('/');
+                        if (p.length === 3) d = `${p[2]}-${p[1]}-${p[0]}`;
+                    }
+                    form.date = d;
+                    
                     form.costParking = row.costParking; form.plateNo = row.plateNo || ''; form.customer = row.customer; 
                     tollList.value = JSON.parse(JSON.stringify(row.originalTollList || [])); 
                     otherList.value = JSON.parse(JSON.stringify(row.originalOtherList || [])); 
@@ -1059,7 +1082,8 @@
                         id: isEditing.value ? editingId.value : Date.now(), 
                         customer: form.customer || '-', costToll: totalTollCost.value, costOther: totalOtherCost.value, total: currentFormTotal.value, 
                         plateNo: form.plateNo || '-', originalTollList: JSON.parse(JSON.stringify(tollList.value)), originalOtherList: JSON.parse(JSON.stringify(otherList.value)),
-                        rawDate: form.date,
+                        rawDate: form.date, // YYYY-MM-DD
+                        date: form.date, // YYYY-MM-DD
                         salesName: isEditing.value ? (existingRow?.salesName || header.salesName) : header.salesName,
                         unit: isEditing.value ? (existingRow?.unit || header.unit) : header.unit,
                         status: 'Pending'
