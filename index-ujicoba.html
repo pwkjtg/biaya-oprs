@@ -995,15 +995,11 @@
                 const parseVal = (val) => { if (!val) return 0; if (typeof val === 'number') return val; return parseInt(val.replace(/\./g, '')) || 0; };
                 const formatVal = (num) => { if (!num && num !== 0) return ''; return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
                 
-                // FIX: Mencegah bug undefined/undefined/ dengan penyembuhan data otomatis
                 const formatDateID = (dateString) => { 
                     if (!dateString) return ''; 
                     let str = String(dateString);
-                    // Bersihkan jika ada undefined yang tersangkut dari cache lama
                     if (str.includes('undefined')) str = str.replace(/undefined\//g, '');
-                    // Jika format sudah DD/MM/YYYY
                     if (str.includes('/')) return str; 
-                    // Konversi YYYY-MM-DD ke DD/MM/YYYY
                     const parts = str.split('T')[0].split('-'); 
                     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; 
                     return str; 
@@ -1047,11 +1043,14 @@
                     showDeleteModal.value = false; 
                 };
                 
+                // =========================================================
+                // FIX BESAR: MENGISI DAN FORMATTING DATA SAAT DIBUKA
+                // =========================================================
                 const editRow = (row) => { 
-                    isEditing.value = true; editingId.value = row.id; 
-                    Object.keys(form).forEach(k => form[k] = row[k]); 
+                    isEditing.value = true; 
+                    editingId.value = row.id; 
                     
-                    // FIX: Perbaiki tanggal rusak jika terlanjur dimuat
+                    // 1. Ambil data Standard
                     let d = row.rawDate || row.date; 
                     if (d && String(d).includes('/')) {
                         let clean = String(d).replace(/undefined\//g, '');
@@ -1060,9 +1059,44 @@
                     }
                     form.date = d;
                     
-                    form.costParking = row.costParking; form.plateNo = row.plateNo || ''; form.customer = row.customer; 
-                    tollList.value = JSON.parse(JSON.stringify(row.originalTollList || [])); 
-                    otherList.value = JSON.parse(JSON.stringify(row.originalOtherList || [])); 
+                    form.city = row.city || ''; 
+                    form.customer = row.customer || '';
+                    form.plateNo = row.plateNo || ''; 
+                    form.fuelVol = row.fuelVol || ''; 
+                    form.fuelKm = row.fuelKm || ''; 
+
+                    // 2. Format Ulang Keuangan Supaya Tampil dengan Sempurna!
+                    form.costFuel = row.costFuel ? formatVal(row.costFuel) : '';
+                    form.costParking = row.costParking ? formatVal(row.costParking) : '';
+                    form.costMaintenance = row.costMaintenance ? formatVal(row.costMaintenance) : '';
+                    form.costPublicTransport = row.costPublicTransport ? formatVal(row.costPublicTransport) : '';
+                    form.costMeal = row.costMeal ? formatVal(row.costMeal) : '';
+                    form.costHotel = row.costHotel ? formatVal(row.costHotel) : '';
+                    form.costDriver = row.costDriver ? formatVal(row.costDriver) : '';
+                    form.costEntertain = row.costEntertain ? formatVal(row.costEntertain) : '';
+                    
+                    // 3. Rincian Tol: Pastikan ada minimal 1 Array kosong agar Input Field Tetap Tampil
+                    let tList = [];
+                    if (row.originalTollList && Array.isArray(row.originalTollList)) {
+                        tList = JSON.parse(JSON.stringify(row.originalTollList));
+                    }
+                    if (tList.length === 0) tList.push({ name: '', cost: '' });
+                    
+                    // Format Angka di dalam Rincian Tol
+                    tList.forEach(t => { t.cost = t.cost ? formatVal(t.cost) : ''; });
+                    tollList.value = tList;
+                    
+                    // 4. Rincian Lain-Lain: Sama, minimal 1 Array kosong
+                    let oList = [];
+                    if (row.originalOtherList && Array.isArray(row.originalOtherList)) {
+                        oList = JSON.parse(JSON.stringify(row.originalOtherList));
+                    }
+                    if (oList.length === 0) oList.push({ name: '', cost: '' });
+                    
+                    // Format Angka di dalam Rincian Lain-lain
+                    oList.forEach(o => { o.cost = o.cost ? formatVal(o.cost) : ''; });
+                    otherList.value = oList;
+
                     showForm.value = true; 
                 };
                 
