@@ -1056,18 +1056,18 @@
                     showDeleteModal.value = false; 
                 };
                 
-                // =========================================================================
-                // AUTO-RECOVERY SAAT MEMBUKA DATA LAMA / DATA ERROR
-                // =========================================================================
                 const editRow = (row) => { 
                     isEditing.value = true; editingId.value = row.id; 
                     
+                    // 1. Reset dan Ambil data Standard
+                    resetForm();
                     form.city = row.city || ''; 
                     form.customer = row.customer || '';
                     form.plateNo = row.plateNo || ''; 
                     form.fuelVol = row.fuelVol || ''; 
                     form.fuelKm = row.fuelKm || ''; 
                     
+                    // FIX: Perbaiki tanggal rusak jika terlanjur dimuat
                     let d = row.rawDate || row.date; 
                     if (d && String(d).includes('/')) {
                         let clean = String(d).replace(/undefined\//g, '');
@@ -1076,56 +1076,51 @@
                     }
                     form.date = d;
                     
-                    // Standard Fields Formatting
-                    form.costFuel = row.costFuel ? formatVal(row.costFuel) : '';
-                    form.costParking = row.costParking ? formatVal(row.costParking) : '';
-                    form.costMaintenance = row.costMaintenance ? formatVal(row.costMaintenance) : '';
-                    form.costPublicTransport = row.costPublicTransport ? formatVal(row.costPublicTransport) : '';
-                    form.costMeal = row.costMeal ? formatVal(row.costMeal) : '';
-                    form.costHotel = row.costHotel ? formatVal(row.costHotel) : '';
-                    form.costDriver = row.costDriver ? formatVal(row.costDriver) : '';
-                    form.costEntertain = row.costEntertain ? formatVal(row.costEntertain) : '';
-
-                    // === RECOVERY DATA RINCIAN TOL ===
+                    // 2. Format Ulang Keuangan Supaya Muncul Ribuan di Input
+                    form.costFuel = formatVal(row.costFuel);
+                    form.costParking = formatVal(row.costParking);
+                    form.costMaintenance = formatVal(row.costMaintenance);
+                    form.costPublicTransport = formatVal(row.costPublicTransport);
+                    form.costMeal = formatVal(row.costMeal);
+                    form.costHotel = formatVal(row.costHotel);
+                    form.costDriver = formatVal(row.costDriver);
+                    form.costEntertain = formatVal(row.costEntertain);
+                    
+                    // 3. RECOVERY DATA TOL (Mencegah Tol Lama jadi 0)
                     let parsedToll = [];
-                    // Jika dari server masuk sebagai teks (String JSON)
                     if (typeof row.originalTollList === 'string') {
                         try { parsedToll = JSON.parse(row.originalTollList); } catch(e) {}
                     } else if (Array.isArray(row.originalTollList)) {
                         parsedToll = row.originalTollList;
                     }
-
+                    
                     if (parsedToll && parsedToll.length > 0 && parsedToll[0].name !== undefined) {
-                        // Cloning aman agar tidak reaktif silang
-                        tollList.value = JSON.parse(JSON.stringify(parsedToll)); 
+                        tollList.value = JSON.parse(JSON.stringify(parsedToll));
                     } else if (parseVal(row.costToll) > 0) {
-                        // Jika array kosong tapi total tolnya ada (Data model Lama)
-                        tollList.value = [{ name: 'Tol (Auto Recovery)', cost: row.costToll }];
+                        tollList.value = [{ name: 'Tol (Data Lama)', cost: row.costToll }];
                     } else {
-                        // Default jika sama sekali kosong
                         tollList.value = [{ name: '', cost: '' }];
                     }
+                    // Pastikan angkanya di-format
+                    tollList.value.forEach(t => { t.cost = formatVal(t.cost); });
                     
-                    // Paskan format ribuan (mengatasi error "0" di kotak input)
-                    tollList.value.forEach(t => { t.cost = t.cost ? formatVal(t.cost) : ''; });
-
-                    // === RECOVERY DATA LAIN-LAIN ===
+                    // 4. RECOVERY DATA LAIN-LAIN
                     let parsedOther = [];
                     if (typeof row.originalOtherList === 'string') {
                         try { parsedOther = JSON.parse(row.originalOtherList); } catch(e) {}
                     } else if (Array.isArray(row.originalOtherList)) {
                         parsedOther = row.originalOtherList;
                     }
-
+                    
                     if (parsedOther && parsedOther.length > 0 && parsedOther[0].name !== undefined) {
                         otherList.value = JSON.parse(JSON.stringify(parsedOther));
                     } else if (parseVal(row.costOther) > 0) {
-                        otherList.value = [{ name: 'Lain-lain (Auto Recovery)', cost: row.costOther }];
+                        otherList.value = [{ name: 'Lain-lain (Data Lama)', cost: row.costOther }];
                     } else {
                         otherList.value = [{ name: '', cost: '' }];
                     }
-                    
-                    otherList.value.forEach(o => { o.cost = o.cost ? formatVal(o.cost) : ''; });
+                    // Pastikan angkanya di-format
+                    otherList.value.forEach(o => { o.cost = formatVal(o.cost); });
 
                     showForm.value = true; 
                 };
