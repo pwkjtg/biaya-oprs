@@ -918,7 +918,7 @@
                         action: 'write',
                         data: {
                             id: r.id.toString(),
-                            date: r.date, // FIX: Kirim tanggal utuh YYYY-MM-DD ke Google Sheet
+                            date: r.date, 
                             salesName: isEditMode ? (r.salesName || header.salesName) : header.salesName, 
                             unit: isEditMode ? (r.unit || header.unit) : header.unit,
                             city: r.city, 
@@ -950,8 +950,8 @@
                         isLoading.value = false;
                         if (result && result.status === 'success') {
                             alert("Berhasil!\n" + result.message);
-                            isInitialLoad = true; // Mencegah notifikasi untuk pengirim
-                            syncData();
+                            isInitialLoad = true; 
+                            syncData(); // Re-sync agar mendapatkan copy bersih dari server
                         } else { alert("Gagal dari server:\n" + (result ? result.message : 'Unknown Error')); }
                     })
                     .catch(error => {
@@ -993,7 +993,14 @@
                 const costFields = { costParking: 'Parkir', costMaintenance: 'Perbaikan Mobil', costPublicTransport: 'Trans. Umum', costMeal: 'Uang Makan', costHotel: 'Hotel', costDriver: 'Extra Supir', costEntertain: 'Entertain' };
 
                 const parseVal = (val) => { if (!val) return 0; if (typeof val === 'number') return val; return parseInt(val.replace(/\./g, '')) || 0; };
-                const formatVal = (num) => { if (!num && num !== 0) return ''; return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+                
+                // FORMAT ANTI ERROR: Pastikan input selalu string angka lalu diberi titik
+                const formatVal = (num) => { 
+                    if (!num && num !== 0) return ''; 
+                    let str = String(num).replace(/\D/g, ''); // bersihkan simbol aneh
+                    if (!str) return '';
+                    return str.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
+                };
                 
                 const formatDateID = (dateString) => { 
                     if (!dateString) return ''; 
@@ -1005,10 +1012,16 @@
                     return str; 
                 };
 
-                const formatInput = (e, key) => { form[key] = formatVal(e.target.value.replace(/\D/g, '')); };
-                const formatHeaderKasbon = (e) => { header.kasbon = formatVal(e.target.value.replace(/\D/g, '')); };
-                const formatTollInput = (e, index) => { tollList.value[index].cost = formatVal(e.target.value.replace(/\D/g, '')); };
-                const formatOtherInput = (e, index) => { otherList.value[index].cost = formatVal(e.target.value.replace(/\D/g, '')); };
+                const formatInput = (e, key) => { form[key] = formatVal(e.target.value); };
+                const formatHeaderKasbon = (e) => { header.kasbon = formatVal(e.target.value); };
+                
+                // FORMAT TOL KHUSUS (Reaktif Langsung ke Array Vue)
+                const formatTollInput = (e, index) => { 
+                    tollList.value[index].cost = formatVal(e.target.value); 
+                };
+                const formatOtherInput = (e, index) => { 
+                    otherList.value[index].cost = formatVal(e.target.value); 
+                };
 
                 const totalTollCost = computed(() => tollList.value.reduce((sum, item) => sum + parseVal(item.cost), 0));
                 const totalOtherCost = computed(() => otherList.value.reduce((sum, item) => sum + parseVal(item.cost), 0));
@@ -1043,14 +1056,18 @@
                     showDeleteModal.value = false; 
                 };
                 
-                // =========================================================
-                // FIX BESAR: MENGISI DAN FORMATTING DATA SAAT DIBUKA
-                // =========================================================
+                // =========================================================================
+                // AUTO-RECOVERY SAAT MEMBUKA DATA LAMA / DATA ERROR
+                // =========================================================================
                 const editRow = (row) => { 
-                    isEditing.value = true; 
-                    editingId.value = row.id; 
+                    isEditing.value = true; editingId.value = row.id; 
                     
-                    // 1. Ambil data Standard
+                    form.city = row.city || ''; 
+                    form.customer = row.customer || '';
+                    form.plateNo = row.plateNo || ''; 
+                    form.fuelVol = row.fuelVol || ''; 
+                    form.fuelKm = row.fuelKm || ''; 
+                    
                     let d = row.rawDate || row.date; 
                     if (d && String(d).includes('/')) {
                         let clean = String(d).replace(/undefined\//g, '');
@@ -1059,13 +1076,7 @@
                     }
                     form.date = d;
                     
-                    form.city = row.city || ''; 
-                    form.customer = row.customer || '';
-                    form.plateNo = row.plateNo || ''; 
-                    form.fuelVol = row.fuelVol || ''; 
-                    form.fuelKm = row.fuelKm || ''; 
-
-                    // 2. Format Ulang Keuangan Supaya Tampil dengan Sempurna!
+                    // Standard Fields Formatting
                     form.costFuel = row.costFuel ? formatVal(row.costFuel) : '';
                     form.costParking = row.costParking ? formatVal(row.costParking) : '';
                     form.costMaintenance = row.costMaintenance ? formatVal(row.costMaintenance) : '';
@@ -1074,28 +1085,47 @@
                     form.costHotel = row.costHotel ? formatVal(row.costHotel) : '';
                     form.costDriver = row.costDriver ? formatVal(row.costDriver) : '';
                     form.costEntertain = row.costEntertain ? formatVal(row.costEntertain) : '';
-                    
-                    // 3. Rincian Tol: Pastikan ada minimal 1 Array kosong agar Input Field Tetap Tampil
-                    let tList = [];
-                    if (row.originalTollList && Array.isArray(row.originalTollList)) {
-                        tList = JSON.parse(JSON.stringify(row.originalTollList));
+
+                    // === RECOVERY DATA RINCIAN TOL ===
+                    let parsedToll = [];
+                    // Jika dari server masuk sebagai teks (String JSON)
+                    if (typeof row.originalTollList === 'string') {
+                        try { parsedToll = JSON.parse(row.originalTollList); } catch(e) {}
+                    } else if (Array.isArray(row.originalTollList)) {
+                        parsedToll = row.originalTollList;
                     }
-                    if (tList.length === 0) tList.push({ name: '', cost: '' });
-                    
-                    // Format Angka di dalam Rincian Tol
-                    tList.forEach(t => { t.cost = t.cost ? formatVal(t.cost) : ''; });
-                    tollList.value = tList;
-                    
-                    // 4. Rincian Lain-Lain: Sama, minimal 1 Array kosong
-                    let oList = [];
-                    if (row.originalOtherList && Array.isArray(row.originalOtherList)) {
-                        oList = JSON.parse(JSON.stringify(row.originalOtherList));
+
+                    if (parsedToll && parsedToll.length > 0 && parsedToll[0].name !== undefined) {
+                        // Cloning aman agar tidak reaktif silang
+                        tollList.value = JSON.parse(JSON.stringify(parsedToll)); 
+                    } else if (parseVal(row.costToll) > 0) {
+                        // Jika array kosong tapi total tolnya ada (Data model Lama)
+                        tollList.value = [{ name: 'Tol (Auto Recovery)', cost: row.costToll }];
+                    } else {
+                        // Default jika sama sekali kosong
+                        tollList.value = [{ name: '', cost: '' }];
                     }
-                    if (oList.length === 0) oList.push({ name: '', cost: '' });
                     
-                    // Format Angka di dalam Rincian Lain-lain
-                    oList.forEach(o => { o.cost = o.cost ? formatVal(o.cost) : ''; });
-                    otherList.value = oList;
+                    // Paskan format ribuan (mengatasi error "0" di kotak input)
+                    tollList.value.forEach(t => { t.cost = t.cost ? formatVal(t.cost) : ''; });
+
+                    // === RECOVERY DATA LAIN-LAIN ===
+                    let parsedOther = [];
+                    if (typeof row.originalOtherList === 'string') {
+                        try { parsedOther = JSON.parse(row.originalOtherList); } catch(e) {}
+                    } else if (Array.isArray(row.originalOtherList)) {
+                        parsedOther = row.originalOtherList;
+                    }
+
+                    if (parsedOther && parsedOther.length > 0 && parsedOther[0].name !== undefined) {
+                        otherList.value = JSON.parse(JSON.stringify(parsedOther));
+                    } else if (parseVal(row.costOther) > 0) {
+                        otherList.value = [{ name: 'Lain-lain (Auto Recovery)', cost: row.costOther }];
+                    } else {
+                        otherList.value = [{ name: '', cost: '' }];
+                    }
+                    
+                    otherList.value.forEach(o => { o.cost = o.cost ? formatVal(o.cost) : ''; });
 
                     showForm.value = true; 
                 };
@@ -1114,8 +1144,13 @@
                     const rowData = { 
                         ...form, 
                         id: isEditing.value ? editingId.value : Date.now(), 
-                        customer: form.customer || '-', costToll: totalTollCost.value, costOther: totalOtherCost.value, total: currentFormTotal.value, 
-                        plateNo: form.plateNo || '-', originalTollList: JSON.parse(JSON.stringify(tollList.value)), originalOtherList: JSON.parse(JSON.stringify(otherList.value)),
+                        customer: form.customer || '-', 
+                        costToll: totalTollCost.value, 
+                        costOther: totalOtherCost.value, 
+                        total: currentFormTotal.value, 
+                        plateNo: form.plateNo || '-', 
+                        originalTollList: JSON.parse(JSON.stringify(tollList.value)), 
+                        originalOtherList: JSON.parse(JSON.stringify(otherList.value)),
                         rawDate: form.date, // YYYY-MM-DD
                         date: form.date, // YYYY-MM-DD
                         salesName: isEditing.value ? (existingRow?.salesName || header.salesName) : header.salesName,
@@ -1144,12 +1179,16 @@
                     
                     const getTollString = (r, separator = '\n') => {
                         if (parseVal(r.costToll) <= 0) return '';
-                        const details = r.originalTollList?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
+                        let arr = [];
+                        if (typeof r.originalTollList === 'string') { try { arr = JSON.parse(r.originalTollList); } catch(e){} } else if (Array.isArray(r.originalTollList)) { arr = r.originalTollList; }
+                        const details = arr.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
                         return details ? `${details}${separator}Total: ${formatVal(r.costToll)}` : formatVal(r.costToll);
                     };
                     const getOtherString = (r, separator = '\n') => {
                         if (parseVal(r.costOther) <= 0) return '';
-                        const details = r.originalOtherList?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
+                        let arr = [];
+                        if (typeof r.originalOtherList === 'string') { try { arr = JSON.parse(r.originalOtherList); } catch(e){} } else if (Array.isArray(r.originalOtherList)) { arr = r.originalOtherList; }
+                        const details = arr.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
                         return details ? `${details}${separator}Total: ${formatVal(r.costOther)}` : formatVal(r.costOther);
                     };
 
@@ -1284,7 +1323,3 @@
     </script>
 </body>
 </html>
-
-
-
-
