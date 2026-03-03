@@ -1498,9 +1498,6 @@
 
                     doc.setFont(undefined, "normal");
                     doc.text(marisText, 40, nameY, {align: "center"});
-                    // let wM = doc.getTextWidth(marisText);
-                    // doc.setLineWidth(0.2);
-                    // doc.line(40 - (wM/2), nameY+1, 40 + (wM/2), nameY+1);
 
                     doc.setFont(undefined, "bold"); 
                     doc.text(agusText, 100, nameY, {align: "center"});
@@ -1509,8 +1506,6 @@
 
                     doc.setFont(undefined, "normal");
                     doc.text(pemohonText, 160, nameY, {align: "center"});
-                    // let wP = doc.getTextWidth(pemohonText);
-                    // doc.line(160 - (wP/2), nameY+1, 160 + (wP/2), nameY+1);
 
                     doc.text("Kasir", 40, nameY+6, {align: "center"});
                     doc.text("Assistant Sales Manager", 100, nameY+6, {align: "center"}); 
@@ -1613,8 +1608,6 @@
 
                     doc.setFont(undefined, "normal");
                     doc.text(pemohonName, 150, finalY, {align: "center"});
-                    // let wPp = doc.getTextWidth(pemohonName);
-                    // doc.line(150 - (wPp/2), finalY+1, 150 + (wPp/2), finalY+1);
                     
                     // TITLE CASE JABATAN
                     const toTitleCase = (str) => {
