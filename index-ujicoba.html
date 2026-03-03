@@ -1515,8 +1515,22 @@
                     const fileName = `Laporan Biaya Ops_${header.salesName || 'Karyawan'}_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}`;
                     let sumVol = 0, sumFuel = 0, sumParking = 0, sumToll = 0, sumMaint = 0, sumTrans = 0, sumMeal = 0, sumHotel = 0, sumDriver = 0, sumEntertain = 0, sumOther = 0;
                     
-                    const getTollString = (r, separator = '\n') => { if (parseVal(r.costToll) <= 0) return ''; const details = r.originalTollList?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator); return details ? `${details}${separator}Total: ${formatVal(r.costToll)}` : formatVal(r.costToll); };
-                    const getOtherString = (r, separator = '\n') => { if (parseVal(r.costOther) <= 0) return ''; const details = r.originalOtherList?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator); return details ? `${details}${separator}Total: ${formatVal(r.costOther)}` : formatVal(r.costOther); };
+                    const getTollString = (r, separator = '\n') => { 
+                        if (parseVal(r.costToll) <= 0) return ''; 
+                        let arr = [];
+                        if (typeof r.originalTollList === 'string') { try { arr = JSON.parse(r.originalTollList); } catch(e){} } 
+                        else if (Array.isArray(r.originalTollList)) { arr = r.originalTollList; }
+                        const details = arr?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator); 
+                        return details ? `${details}${separator}Total: ${formatVal(r.costToll)}` : formatVal(r.costToll); 
+                    };
+                    const getOtherString = (r, separator = '\n') => { 
+                        if (parseVal(r.costOther) <= 0) return ''; 
+                        let arr = [];
+                        if (typeof r.originalOtherList === 'string') { try { arr = JSON.parse(r.originalOtherList); } catch(e){} } 
+                        else if (Array.isArray(r.originalOtherList)) { arr = r.originalOtherList; }
+                        const details = arr?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator); 
+                        return details ? `${details}${separator}Total: ${formatVal(r.costOther)}` : formatVal(r.costOther); 
+                    };
                     dataToExport.forEach(r => { sumVol += parseFloat(r.fuelVol) || 0; sumFuel += parseVal(r.costFuel); sumParking += parseVal(r.costParking); sumToll += r.costToll; sumMaint += parseVal(r.costMaintenance); sumTrans += parseVal(r.costPublicTransport); sumMeal += parseVal(r.costMeal); sumHotel += parseVal(r.costHotel); sumDriver += parseVal(r.costDriver); sumEntertain += parseVal(r.costEntertain); sumOther += r.costOther; });
 
                     if (type === 'pdf') {
@@ -1616,7 +1630,7 @@
                         const merges = [ { s: { r: 4, c: 0 }, e: { r: 5, c: 0 } }, { s: { r: 4, c: 1 }, e: { r: 5, c: 1 } }, { s: { r: 4, c: 2 }, e: { r: 5, c: 2 } }, { s: { r: 4, c: 3 }, e: { r: 5, c: 3 } }, { s: { r: 4, c: 4 }, e: { r: 4, c: 6 } }, { s: { r: 4, c: 7 }, e: { r: 5, c: 7 } }, { s: { r: 4, c: 8 }, e: { r: 5, c: 8 } }, { s: { r: 4, c: 9 }, e: { r: 5, c: 9 } }, { s: { r: 4, c: 10 }, e: { r: 5, c: 10 } }, { s: { r: 4, c: 11 }, e: { r: 5, c: 11 } }, { s: { r: 4, c: 12 }, e: { r: 5, c: 12 } }, { s: { r: 4, c: 13 }, e: { r: 5, c: 13 } }, { s: { r: 4, c: 14 }, e: { r: 5, c: 14 } }, { s: { r: 4, c: 15 }, e: { r: 5, c: 15 } }, { s: { r: 4, c: 16 }, e: { r: 5, c: 16 } }, ];
                         const rowHeights = []; rowHeights[0] = { hpx: 20 }; rowHeights[1] = { hpx: 20 }; rowHeights[2] = { hpx: 20 }; rowHeights[3] = { hpx: 10 }; rowHeights[4] = { hpx: 25 }; rowHeights[5] = { hpx: 25 };
                         let currentRow = 6;
-                        rows.value.forEach((r, i) => {
+                        dataToExport.forEach((r, i) => {
                             wsData.push([ i + 1, formatDateID(r.date), r.city, r.customer, r.plateNo || '-', "", "", parseVal(r.costParking), getTollString(r, ', '), parseVal(r.costMaintenance), parseVal(r.costPublicTransport), parseVal(r.costMeal), parseVal(r.costHotel), parseVal(r.costDriver), parseVal(r.costEntertain), getOtherString(r, ', '), parseVal(r.total) ]);
                             rowHeights[currentRow] = { hpx: 18 }; 
                             wsData.push([ "", "", "", "", Number(r.fuelVol), r.fuelKm, parseVal(r.costFuel), "", "", "", "", "", "", "", "", "", "" ]);
@@ -1664,7 +1678,7 @@
                             </tr>
                         `;
 
-                        rows.value.forEach((r, i) => {
+                        dataToExport.forEach((r, i) => {
                             const tollString = getTollString(r, '<br>');
                             const otherString = getOtherString(r, '<br>');
                             let rowHTML = `
