@@ -314,6 +314,23 @@
                                 <p class="text-[10px] text-gray-400 mt-1 italic">Terbilang: {{ terbilang(kasbonForm.jumlah) }}</p>
                             </div>
 
+                            <!-- KOMPONEN TANDA TANGAN (KASBON) -->
+                            <div class="pt-4 border-t border-gray-100 dark:border-gray-700 mt-4">
+                                <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-800 dark:text-white">Tanda Tangan Digital</h3>
+                                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Disematkan otomatis saat Cetak PDF</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <img v-if="signatureDataUrl" :src="signatureDataUrl" class="h-10 object-contain border border-gray-200 dark:border-gray-700 rounded bg-white p-1" alt="Signature">
+                                        <button @click="openSigModal" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition">
+                                            {{ signatureDataUrl ? 'Ubah TTD' : 'Atur TTD' }}
+                                        </button>
+                                        <button v-if="signatureDataUrl" @click="signatureDataUrl = null" class="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition" title="Hapus TTD">✕</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button @click="generateKasbonPDF" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 transition flex justify-center items-center gap-2">
                                 <span>📄 Cetak PDF Kasbon</span>
                             </button>
@@ -367,6 +384,23 @@
                             </div>
                             
                             <button @click="addPpdRow" class="w-full py-2 border border-dashed border-emerald-400 text-emerald-600 rounded-xl text-sm font-bold bg-emerald-50/50">+ Tambah Jadwal</button>
+
+                            <!-- KOMPONEN TANDA TANGAN (PPD) -->
+                            <div class="pt-4 border-t border-gray-100 dark:border-gray-700 mt-4">
+                                <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                    <div>
+                                        <h3 class="text-sm font-bold text-gray-800 dark:text-white">Tanda Tangan Digital</h3>
+                                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Disematkan otomatis saat Cetak PDF</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <img v-if="signatureDataUrl" :src="signatureDataUrl" class="h-10 object-contain border border-gray-200 dark:border-gray-700 rounded bg-white p-1" alt="Signature">
+                                        <button @click="openSigModal" class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition">
+                                            {{ signatureDataUrl ? 'Ubah TTD' : 'Atur TTD' }}
+                                        </button>
+                                        <button v-if="signatureDataUrl" @click="signatureDataUrl = null" class="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition" title="Hapus TTD">✕</button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <button @click="generatePpdPDF" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 transition flex justify-center items-center gap-2">
                                 <span>📄 Cetak PDF Perjalanan Dinas</span>
@@ -482,7 +516,6 @@
                         <div class="space-y-4">
                             <div class="flex justify-between items-center px-1">
                                 <h3 class="font-bold text-gray-700 dark:text-gray-200 text-lg">Riwayat Laporan ({{ filteredRows.length }})</h3>
-                                <!-- TAMPILKAN TOMBOL HAPUS SEMUA UNTUK SEMUA ROLE (ADMIN/KASIR/KARYAWAN) -->
                                 <button v-if="filteredRows.length > 0" @click="confirmClear" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg active:bg-red-100 transition hover:bg-red-100">Hapus Semua</button>
                             </div>
 
@@ -520,7 +553,6 @@
                                             <template v-if="currentUser.role === 'admin' || currentUser.role === 'kasir'">
                                                 <button @click="editRow(row)" class="flex-1 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300 text-xs font-bold rounded-lg hover:bg-blue-100 active:scale-95 transition">Detail / Edit</button>
                                                 <button @click="openValidationModal(row)" class="flex-1 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 text-xs font-bold rounded-lg hover:bg-purple-100 active:scale-95 transition">Validasi</button>
-                                                <!-- TAMPILKAN TOMBOL HAPUS UNTUK ADMIN/KASIR -->
                                                 <button @click="requestDelete(row.id)" class="flex-1 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 text-xs font-bold rounded-lg hover:bg-red-100 active:scale-95 transition">Hapus</button>
                                             </template>
                                         </div>
@@ -547,7 +579,7 @@
                     </div>
                 </main>
 
-                <!-- FAB ADD (HANYA MUNCUL DI MENU BIAYA OPS UNTUK KARYAWAN) -->
+                <!-- FAB ADD -->
                 <div v-if="currentMenu === 'biaya_ops' && currentUser.role === 'karyawan'" class="fixed bottom-6 right-6 z-40 pb-safe-bottom">
                     <button @click="openForm" class="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 text-white rounded-full shadow-xl shadow-emerald-600/30 p-4 flex items-center gap-2 active:scale-95 transition transform hover:scale-105">
                         <span class="text-2xl leading-none font-bold mb-1">+</span>
@@ -556,6 +588,42 @@
                 </div>
             </div>
         </transition>
+
+        <!-- MODAL TANDA TANGAN (NEW) -->
+        <div v-if="showSigModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-zoom flex flex-col">
+                <div class="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-dark-900">
+                    <h3 class="text-sm font-bold text-gray-800 dark:text-white">✍️ Atur Tanda Tangan</h3>
+                    <button @click="closeSigModal" class="bg-gray-200 dark:bg-gray-700 p-1.5 rounded-full text-gray-500 hover:bg-gray-300 transition">✕</button>
+                </div>
+                
+                <div class="p-5 space-y-4">
+                    <div class="flex gap-2 bg-gray-100 dark:bg-dark-900 p-1 rounded-xl">
+                        <button @click="sigTab = 'draw'" :class="sigTab === 'draw' ? 'bg-white dark:bg-dark-700 shadow font-bold text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'" class="flex-1 py-2 rounded-lg text-xs transition">Gambar</button>
+                        <button @click="sigTab = 'upload'" :class="sigTab === 'upload' ? 'bg-white dark:bg-dark-700 shadow font-bold text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'" class="flex-1 py-2 rounded-lg text-xs transition">Upload Foto</button>
+                    </div>
+
+                    <div v-show="sigTab === 'draw'" class="space-y-3">
+                        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 overflow-hidden relative" style="height: 200px;">
+                            <canvas id="sigCanvas" class="w-full h-full absolute top-0 left-0 cursor-crosshair" @mousedown="startDraw" @mousemove="draw" @mouseup="endDraw" @mouseleave="endDraw" @touchstart="startDraw" @touchmove.prevent="draw" @touchend="endDraw"></canvas>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="clearSig" class="flex-1 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold hover:bg-gray-300 transition">Hapus</button>
+                            <button @click="saveSig" class="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/30">Simpan TTD</button>
+                        </div>
+                    </div>
+
+                    <div v-show="sigTab === 'upload'" class="space-y-3 text-center py-6">
+                        <svg class="w-12 h-12 text-emerald-500 mx-auto mb-2 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 px-4">Upload foto tanda tangan dari kamera/galeri. Background terang akan otomatis dihapus.</p>
+                        <input type="file" id="sigUpload" accept="image/*" class="hidden" @change="handleUploadSig">
+                        <label for="sigUpload" class="inline-block cursor-pointer px-6 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 transition active:scale-95">
+                            Pilih Foto / Kamera
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- MODAL NOTIFIKASI -->
         <div v-if="showNotifModal" class="fixed inset-0 z-[60] flex items-start justify-center bg-black/50 backdrop-blur-sm p-4 pt-20">
@@ -617,10 +685,10 @@
             </div>
         </div>
 
-        <!-- MODAL FORM INPUT (BIAYA OPERASIONAL) -->
+        <!-- MODAL FORM INPUT -->
         <div v-if="showForm" class="fixed inset-0 z-[50] flex flex-col h-full sm:rounded-2xl sm:h-[90%] sm:max-w-2xl sm:mx-auto sm:mt-10 sm:shadow-2xl sm:border sm:border-gray-200 dark:sm:border-gray-700 pt-safe-top bg-white dark:bg-dark-900 text-gray-800 dark:text-gray-100">
             <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-dark-800 shadow-sm z-10">
-                <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">{{ isEditing ? (currentUser.role === 'karyawan' ? 'Edit Data' : 'Detail Data') : 'Tambah Baru' }}</h3>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">{{ isEditing ? 'Edit Data' : 'Tambah Baru' }}</h3>
                 <button @click="showForm = false" class="bg-gray-100 dark:bg-gray-700 p-2 rounded-full text-gray-500 dark:text-gray-300 hover:bg-gray-200 transition">✕</button>
             </div>
             <div class="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll bg-gray-50 dark:bg-dark-900 pb-24">
@@ -636,67 +704,81 @@
                 <!-- INPUT FORM -->
                 <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Tanggal</label><input type="date" v-model="form.date" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white"></div>
-                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Kota</label><input type="text" v-model="form.city" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white" placeholder="Kota Tujuan"></div>
+                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Tanggal</label><input type="date" v-model="form.date" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white"></div>
+                        <div><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Kota</label><input type="text" v-model="form.city" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white" placeholder="Kota Tujuan"></div>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</label>
-                        <textarea v-model="form.customer" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full mt-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white placeholder-gray-400" placeholder="Contoh: Customer 1, Customer 2, Customer 3 (pisahkan dengan koma)" rows="2"></textarea>
+                        <div class="flex justify-between items-center mb-2"><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</label><button @click="addCustomer" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold">+ Customer</button></div>
+                        <div class="space-y-2">
+                            <div v-for="(cust, index) in customerList" :key="index" class="flex gap-2">
+                                <input type="text" v-model="cust.name" class="flex-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white placeholder-gray-400" placeholder="Contoh: Univ. Diponegoro">
+                                <button v-if="customerList.length > 1" @click="removeCustomer(index)" class="px-3 text-red-500 bg-red-50 rounded-xl font-bold">✕</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- BBM & KENDARAAN -->
+                <!-- BBM & KENDARAAN (PLAT NO PINDAH ATAS) -->
                 <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm space-y-3">
                     <h4 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase">BBM & Kendaraan</h4>
                     <div>
                         <label class="text-[10px] text-gray-500 dark:text-gray-400 font-bold block mb-1">Plat Nomor (Opsional)</label>
-                        <input type="text" v-model="form.plateNo" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2.5 bg-white dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg text-base font-bold text-center uppercase tracking-widest dark:text-white" placeholder="K 1234 AB">
+                        <input type="text" v-model="form.plateNo" class="w-full p-2.5 bg-white dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg text-base font-bold text-center uppercase tracking-widest dark:text-white" placeholder="B 1234 CD">
                     </div>
-                    
                     <div class="grid grid-cols-3 gap-3">
-                        <div><label class="text-[10px] text-gray-500 font-bold">Vol (L)</label><input type="number" step="0.1" v-model="form.fuelVol" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center dark:text-white"></div>
-                        <div><label class="text-[10px] text-gray-500 font-bold">KM</label><input type="number" v-model="form.fuelKm" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center dark:text-white"></div>
-                        <div><label class="text-[10px] text-gray-500 font-bold">Rp</label><input type="text" :value="form.costFuel" @input="formatInput($event, 'costFuel')" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center text-blue-700 dark:text-blue-300"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">Vol (L)</label><input type="number" step="0.1" v-model="form.fuelVol" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center dark:text-white"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">KM</label><input type="number" v-model="form.fuelKm" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center dark:text-white"></div>
+                        <div><label class="text-[10px] text-gray-500 font-bold">Rp</label><input type="text" :value="form.costFuel" @input="formatInput($event, 'costFuel')" class="w-full p-2 bg-white dark:bg-gray-700 border border-blue-200 rounded-lg text-lg font-bold text-center text-blue-700 dark:text-blue-300"></div>
                     </div>
                 </div>
 
-                <!-- TOL -->
+                <!-- TOL (MULTI ENTRY) -->
                 <div class="bg-orange-50/50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/30 shadow-sm space-y-3">
                     <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase">Rincian Tol</h4><span class="text-xs font-bold bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalTollCost) }}</span></div>
                     <div class="space-y-3">
                         <div v-for="(toll, index) in tollList" :key="index" class="flex gap-2">
-                            <input type="text" v-model="toll.name" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="flex-1 p-2 bg-white dark:bg-gray-700 border border-orange-200 dark:border-orange-800 rounded-lg text-sm dark:text-white placeholder-gray-400" placeholder="Pintu Tol">
-                            <input type="text" :value="toll.cost" @input="formatTollInput($event, index)" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-24 p-2 bg-white dark:bg-gray-700 border border-orange-200 dark:border-orange-800 rounded-lg text-sm font-bold dark:text-white" placeholder="0">
-                            <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="removeToll(index)" class="text-red-500 font-bold px-2">✕</button>
+                            <input type="text" v-model="toll.name" class="flex-1 p-2 bg-white dark:bg-gray-700 border border-orange-200 dark:border-orange-800 rounded-lg text-sm dark:text-white placeholder-gray-400" placeholder="Pintu Tol">
+                            <input type="text" :value="toll.cost" @input="formatTollInput($event, index)" class="w-24 p-2 bg-white dark:bg-gray-700 border border-orange-200 dark:border-orange-800 rounded-lg text-sm font-bold dark:text-white" placeholder="0">
+                            <button @click="removeToll(index)" class="text-red-500 font-bold px-2">✕</button>
                         </div>
                     </div>
-                    <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="addToll" class="w-full py-2 border border-dashed border-orange-300 text-orange-600 rounded-lg text-sm font-bold">+ Tambah Baris Tol</button>
+                    <button @click="addToll" class="w-full py-2 border border-dashed border-orange-300 text-orange-600 rounded-lg text-sm font-bold">+ Tambah Baris Tol</button>
                 </div>
 
                 <!-- BIAYA STANDAR LAINNYA -->
                 <div class="bg-white dark:bg-dark-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-5">
                     <h4 class="text-sm font-bold text-gray-500 uppercase border-b pb-2">Biaya Rutin</h4>
                     <div class="grid grid-cols-2 gap-4">
-                        <div v-for="(label, key) in costFields" :key="key"><label class="text-xs font-bold text-gray-500 block mb-1">{{ label }}</label><div class="relative"><span class="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">Rp</span><input type="text" :value="form[key]" @input="formatInput($event, key)" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-full pl-8 p-2 border rounded-lg font-bold text-gray-700 dark:bg-gray-700 dark:text-white"></div></div>
+                        <div v-for="(label, key) in costFields" :key="key">
+                            <label class="text-xs font-bold text-gray-500 block mb-1">{{ label }}</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2.5 text-xs text-gray-400 font-bold">Rp</span>
+                                <input type="text" :value="form[key]" @input="formatInput($event, key)" class="w-full pl-8 p-2 border rounded-lg font-bold text-gray-700 dark:bg-gray-700 dark:text-white">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- LAIN-LAIN -->
+                <!-- LAIN-LAIN (MULTI ENTRY BARU - DIPINDAH KE BAWAH) -->
                 <div class="bg-gray-50/50 dark:bg-gray-700/10 p-4 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm space-y-3">
                     <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Rincian Lain-lain</h4><span class="text-xs font-bold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalOtherCost) }}</span></div>
-                    <div class="space-y-3"><div v-for="(item, index) in otherList" :key="index" class="flex flex-col sm:flex-row gap-2 bg-white dark:bg-gray-700 p-2 rounded-xl border border-gray-200 dark:border-gray-600">
-                        <input type="text" v-model="item.name" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="flex-1 p-2 bg-transparent border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-gray-600 text-base font-medium outline-none dark:text-white" placeholder="Contoh : Tambal Ban, dll">
-                        <div class="flex gap-2 items-center"><span class="text-gray-400 text-xs pl-2 font-bold">Rp</span><input type="text" inputmode="numeric" :value="item.cost" @input="formatOtherInput($event, index)" :readonly="currentUser.role !== 'karyawan' && currentUser.role !== 'admin'" class="w-32 sm:w-40 p-2 bg-transparent text-lg font-bold text-gray-700 dark:text-white outline-none" placeholder="0"><button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="removeOther(index)" class="w-10 h-10 flex items-center justify-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg">✕</button></div>
-                    </div></div>
-                    <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="addOther" class="w-full py-2 border border-dashed border-gray-400 text-gray-500 dark:text-gray-400 rounded-xl text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">+ Tambah Item Lain-lain</button>
+                    <div class="space-y-3">
+                        <div v-for="(item, index) in otherList" :key="index" class="flex flex-col sm:flex-row gap-2 bg-white dark:bg-gray-700 p-2 rounded-xl border border-gray-200 dark:border-gray-600">
+                            <input type="text" v-model="item.name" class="flex-1 p-2 bg-transparent border-b sm:border-b-0 sm:border-r border-gray-100 dark:border-gray-600 text-base font-medium outline-none dark:text-white" placeholder="Ket (Mis: Isi Nitrogen, Tambal Ban, dll)">
+                            <div class="flex gap-2 items-center">
+                                <span class="text-gray-400 text-xs pl-2 font-bold">Rp</span>
+                                <input type="text" inputmode="numeric" :value="item.cost" @input="formatOtherInput($event, index)" class="w-32 sm:w-40 p-2 bg-transparent text-lg font-bold text-gray-700 dark:text-white outline-none" placeholder="0">
+                                <button @click="removeOther(index)" class="w-10 h-10 flex items-center justify-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="addOther" class="w-full py-2 border border-dashed border-gray-400 text-gray-500 dark:text-gray-400 rounded-xl text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">+ Tambah Item Lain-lain</button>
                 </div>
             </div>
+            
             <div class="p-4 bg-white dark:bg-dark-800 border-t border-gray-100 dark:border-gray-700 sticky bottom-0 z-10 shadow-lg pb-safe-bottom">
                 <div class="flex justify-between items-center mb-3"><span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Total Entri Ini</span><span class="text-xl font-bold text-emerald-600 dark:text-emerald-400">{{ formatCurrency(currentFormTotal) }}</span></div>
-                
-                <button v-if="currentUser.role === 'karyawan' || currentUser.role === 'admin'" @click="saveEntry" class="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-lg shadow-lg active:scale-95 transition">{{ isEditing ? 'Update & Kirim' : 'Simpan & Kirim' }}</button>
-                <button v-else @click="showForm = false" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3.5 rounded-xl text-lg shadow-lg active:scale-95 transition">Tutup Detail</button>
-
+                <button @click="saveEntry" class="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-lg shadow-lg active:scale-95 transition">{{ isEditing ? 'Update Data' : 'Simpan' }}</button>
             </div>
         </div>
 
@@ -724,13 +806,9 @@
         // =========================================================================
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwftinAM51hWJ0-NS6cAYeHM8W-mn8JVh_dtDUiRkeH4WpGCL6gtpIYtOFfPyYgXWlm/exec"; 
 
-        // =========================================================
-        // KAMUS DATA KARYAWAN (Dengan Email Admin dan Kasir)
-        // =========================================================
         const daftarKaryawan = {
             "maris@kudus.puragroup.com": { nama: "MARIS TRI WARDANI", unit: "Finance", role: "kasir" },
             "bayufajar@kudus.puragroup.com": { nama: "BAYU FAJAR HABIBI", unit: "IT & Admin", role: "admin" },
-            
             "aguscombi@kudus.puragroup.com": { nama: "AGUS JOKO PITONO", unit: "Job Order", role: "karyawan" },
             "agus-ps@kudus.puragroup.com": { nama: "AGUS PUJI SANTOSO", unit: "PM Group", role: "karyawan" },
             "riyanto_agus@kudus.puragroup.com": { nama: "AGUS RIYANTO", unit: "Job Order", role: "karyawan" },
@@ -747,6 +825,7 @@
             "jatiwicaksono@kudus.puragroup.com": { nama: "JATI WICAKSONO", unit: "Coating Adhesive", role: "karyawan" },
             "jefri-k@kudus.puragroup.com": { nama: "JEFRI KURNIAWAN", unit: "PM Group", role: "karyawan" },
             "joshua-b@kudus.puragroup.com": { nama: "JOSHUA BERNADINO LISTIANTO", unit: "PM Group", role: "karyawan" },
+            "krisna.hutomo@kudus.puragroup.com": { nama: "KRISNA SATRIO HUTOMO", unit: "Job Order", role: "karyawan" },
             "kust_tss@kudus.puragroup.com": { nama: "KUSTARYONO", unit: "TSS", role: "karyawan" },
             "marwanto@kudus.puragroup.com": { nama: "MARWANTO", unit: "Job Order", role: "karyawan" },
             "michelle.d@kudus.puragroup.com": { nama: "MICHELLE DHIFA SEPTIANI NUGROHO", unit: "Job Order", role: "karyawan" },
@@ -757,7 +836,7 @@
             "rokhani@kudus.puragroup.com": { nama: "ROKHANI DHANANJAYA", unit: "Job Order", role: "karyawan" },
             "rurizaki@kudus.puragroup.com": { nama: "RURI ZAKI KURNIAWAN", unit: "Collector", role: "karyawan" },
             "septyo_dwi@kudus.puragroup.com": { nama: "SEPTYO DWI HARMANTO", unit: "PST", role: "karyawan" },
-            "u_ud@kudus.puragroup.com": { nama: "SHOLAHUDDIN", unit: "Metallizing & Indostam", role: "karyawan" },
+            "u_ud@kudus.puragroup.com": { nama: "SHOLAHUDDIN", unit: "Metallizing & Indostamping", role: "karyawan" },
             "sulistianto@kudus.puragroup.com": { nama: "SULISTIANTO", unit: "Collector", role: "karyawan" },
             "suuunarto@gmail.com": { nama: "SUNARTO", unit: "Driver", role: "karyawan" },
             "tiananton@kudus.puragroup.com": { nama: "TIAN ANTON SOETRISNO", unit: "Collector", role: "karyawan" },
@@ -765,9 +844,6 @@
             "yolandakartika@kudus.puragroup.com": { nama: "YOLANDA KARTIKA DEWI", unit: "HR", role: "karyawan" }
         };
 
-        // =========================================================
-        // KONFIGURASI FIREBASE AUTHENTICATION
-        // =========================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDOc6bPBHFSbVsYQF5qszSjBwziQEI6rEc",
             authDomain: "biaya-opr.firebaseapp.com",
@@ -780,7 +856,6 @@
         const firebaseApp = initializeApp(firebaseConfig);
         const auth = getAuth(firebaseApp);
 
-        // FUNGSI TERBILANG UNTUK KASBON (Rupiah Text)
         function generateTerbilang(angka) {
             let bilangan = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
             let result = "";
@@ -789,45 +864,19 @@
             
             if (angka < 12) { result = bilangan[angka]; } 
             else if (angka < 20) { result = generateTerbilang(angka - 10).replace(" Rupiah", "") + " Belas"; } 
-            else if (angka < 100) { 
-                let sisa = angka % 10;
-                result = generateTerbilang(Math.floor(angka / 10)).replace(" Rupiah", "") + " Puluh" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            } 
-            else if (angka < 200) { 
-                let sisa = angka - 100;
-                result = "Seratus" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            } 
-            else if (angka < 1000) { 
-                let sisa = angka % 100;
-                result = generateTerbilang(Math.floor(angka / 100)).replace(" Rupiah", "") + " Ratus" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            } 
-            else if (angka < 2000) { 
-                let sisa = angka - 1000;
-                result = "Seribu" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            } 
-            else if (angka < 1000000) { 
-                let sisa = angka % 1000;
-                result = generateTerbilang(Math.floor(angka / 1000)).replace(" Rupiah", "") + " Ribu" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            } 
-            else if (angka < 1000000000) { 
-                let sisa = angka % 1000000;
-                result = generateTerbilang(Math.floor(angka / 1000000)).replace(" Rupiah", "") + " Juta" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            } 
-            else if (angka < 1000000000000) { 
-                let sisa = angka % 1000000000;
-                result = generateTerbilang(Math.floor(angka / 1000000000)).replace(" Rupiah", "") + " Milyar" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); 
-            }
+            else if (angka < 100) { let sisa = angka % 10; result = generateTerbilang(Math.floor(angka / 10)).replace(" Rupiah", "") + " Puluh" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); } 
+            else if (angka < 200) { let sisa = angka - 100; result = "Seratus" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); } 
+            else if (angka < 1000) { let sisa = angka % 100; result = generateTerbilang(Math.floor(angka / 100)).replace(" Rupiah", "") + " Ratus" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); } 
+            else if (angka < 2000) { let sisa = angka - 1000; result = "Seribu" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); } 
+            else if (angka < 1000000) { let sisa = angka % 1000; result = generateTerbilang(Math.floor(angka / 1000)).replace(" Rupiah", "") + " Ribu" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); } 
+            else if (angka < 1000000000) { let sisa = angka % 1000000; result = generateTerbilang(Math.floor(angka / 1000000)).replace(" Rupiah", "") + " Juta" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); } 
+            else if (angka < 1000000000000) { let sisa = angka % 1000000000; result = generateTerbilang(Math.floor(angka / 1000000000)).replace(" Rupiah", "") + " Milyar" + (sisa > 0 ? " " + generateTerbilang(sisa).replace(" Rupiah", "") : ""); }
             
             result = result.trim().replace(/\s+/g, ' ');
-            if(!result.includes("Rupiah")) {
-                result += " Rupiah";
-            }
+            if(!result.includes("Rupiah")) { result += " Rupiah"; }
             return result;
         }
 
-        // ==========================================
-        // HELPER FORMAT TANGGAL
-        // ==========================================
         function formatDateToDisplay(dateStr) {
             if (!dateStr) return '';
             const months = ["JANuari", "FEBruari", "MARet", "APRil", "MEI", "JUNi", "JULi", "AGTustus", "SEPtember", "OKTober", "NOVember", "DESember"];
@@ -846,7 +895,6 @@
             return `${day}/${month}/${year}`;
         }
 
-        // INISIALISASI VUE APP
         const { createApp, ref, computed, reactive, onMounted, watch } = window.Vue;
 
         createApp({
@@ -860,7 +908,7 @@
                 const showSettings = ref(false);
                 
                 // --- STATE MENU UTAMA ---
-                const currentMenu = ref('selection'); // selection | kasbon | ppd | biaya_ops
+                const currentMenu = ref('selection');
 
                 const todayDateStr = new Date().toISOString().split('T')[0];
 
@@ -877,14 +925,24 @@
                     jadwal: [{tgl: todayDateStr, kota: '', perusahaan: '', keperluan: '', omzet: ''}]
                 });
 
-                // STATE UNTUK PENCARIAN & FILTER
+                // --- STATE TANDA TANGAN ---
+                const signatureDataUrl = ref(localStorage.getItem('salesAppSignature') || null);
+                const showSigModal = ref(false);
+                const sigTab = ref('draw');
+                let isDrawing = false;
+                let ctx = null;
+
+                watch(signatureDataUrl, (val) => {
+                    if (val) localStorage.setItem('salesAppSignature', val);
+                    else localStorage.removeItem('salesAppSignature');
+                });
+
                 const filterDateStart = ref('');
                 const filterDateEnd = ref('');
                 const filterStatus = ref('');
                 const filterKaryawan = ref('');
                 const searchQuery = ref('');
 
-                // STATE NOTIFIKASI
                 const notifications = ref([]);
                 const showNotifModal = ref(false);
 
@@ -894,172 +952,152 @@
                 const header = reactive({ salesName: '', unit: '', kasbon: '' }); 
                 
                 const currentDate = ref(new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }));
-
                 const rows = ref([]);
 
-                watch(rows, (newVal) => {
-                    localStorage.setItem('salesAppRows', JSON.stringify(newVal));
-                }, { deep: true });
+                watch(rows, (newVal) => { localStorage.setItem('salesAppRows', JSON.stringify(newVal)); }, { deep: true });
+                watch(notifications, (newVal) => { localStorage.setItem('salesAppNotifs', JSON.stringify(newVal)); }, { deep: true });
 
-                watch(notifications, (newVal) => {
-                    localStorage.setItem('salesAppNotifs', JSON.stringify(newVal));
-                }, { deep: true });
-
-                // MENDAPATKAN DAFTAR NAMA KARYAWAN DARI DATA (Untuk Dropdown Admin)
-                const uniqueKaryawanList = computed(() => {
-                    const names = rows.value.map(r => r.salesName).filter(Boolean);
-                    return [...new Set(names)].sort();
-                });
-
-                // JUMLAH NOTIFIKASI BELUM DIBACA
+                const uniqueKaryawanList = computed(() => { const names = rows.value.map(r => r.salesName).filter(Boolean); return [...new Set(names)].sort(); });
                 const unreadCount = computed(() => notifications.value.filter(n => !n.read).length);
 
-                // COMPUTED PENCARIAN DAN FILTER
                 const filteredRows = computed(() => {
                     let result = rows.value;
-
-                    if (filterDateStart.value || filterDateEnd.value) {
-                        result = result.filter(row => {
-                            const rowDate = row.date; 
-                            const start = filterDateStart.value; 
-                            const end = filterDateEnd.value;
-                            if (start && end) return rowDate >= start && rowDate <= end;
-                            if (start) return rowDate >= start;
-                            if (end) return rowDate <= end;
-                            return true;
-                        });
-                    }
-
-                    if (filterStatus.value) {
-                        result = result.filter(r => (r.status || 'Pending') === filterStatus.value);
-                    }
-
-                    if (filterKaryawan.value) {
-                        result = result.filter(r => r.salesName === filterKaryawan.value);
-                    }
-
-                    if (searchQuery.value) {
-                        const q = searchQuery.value.toLowerCase();
-                        result = result.filter(row => {
-                            return (row.salesName && row.salesName.toLowerCase().includes(q)) ||
-                                   (row.city && row.city.toLowerCase().includes(q)) ||
-                                   (row.customer && row.customer.toLowerCase().includes(q));
-                        });
-                    }
-
+                    if (filterDateStart.value || filterDateEnd.value) { result = result.filter(row => { const rowDate = row.date; const start = filterDateStart.value; const end = filterDateEnd.value; if (start && end) return rowDate >= start && rowDate <= end; if (start) return rowDate >= start; if (end) return rowDate <= end; return true; }); }
+                    if (filterStatus.value) { result = result.filter(r => (r.status || 'Pending') === filterStatus.value); }
+                    if (filterKaryawan.value) { result = result.filter(r => r.salesName === filterKaryawan.value); }
+                    if (searchQuery.value) { const q = searchQuery.value.toLowerCase(); result = result.filter(row => { return (row.salesName && row.salesName.toLowerCase().includes(q)) || (row.city && row.city.toLowerCase().includes(q)) || (row.customer && row.customer.toLowerCase().includes(q)); }); }
                     return result;
                 });
 
-                const resetFilter = () => { 
-                    filterDateStart.value = ''; 
-                    filterDateEnd.value = ''; 
-                    filterStatus.value = '';
-                    filterKaryawan.value = '';
-                    searchQuery.value = ''; 
+                const resetFilter = () => { filterDateStart.value = ''; filterDateEnd.value = ''; filterStatus.value = ''; filterKaryawan.value = ''; searchQuery.value = ''; };
+
+                // --- TANDA TANGAN METHODS ---
+                const openSigModal = () => {
+                    showSigModal.value = true;
+                    setTimeout(() => {
+                        const canvas = document.getElementById('sigCanvas');
+                        if (canvas) {
+                            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                            canvas.width = canvas.offsetWidth * ratio;
+                            canvas.height = canvas.offsetHeight * ratio;
+                            ctx = canvas.getContext('2d');
+                            ctx.scale(ratio, ratio);
+                            ctx.lineWidth = 3;
+                            ctx.lineCap = 'round';
+                            ctx.strokeStyle = '#0f172a'; 
+                        }
+                    }, 100);
+                };
+                
+                const closeSigModal = () => { showSigModal.value = false; };
+                const clearSig = () => { if(ctx) { const canvas = document.getElementById('sigCanvas'); ctx.clearRect(0, 0, canvas.width, canvas.height); } };
+                const saveSig = () => { 
+                    const canvas = document.getElementById('sigCanvas'); 
+                    const blank = document.createElement('canvas');
+                    blank.width = canvas.width; blank.height = canvas.height;
+                    if(canvas.toDataURL() === blank.toDataURL()) { alert("Tanda tangan masih kosong!"); return; }
+                    signatureDataUrl.value = canvas.toDataURL('image/png'); 
+                    showSigModal.value = false; 
                 };
 
-                // ----------------------------------------------------
-                // FUNGSI NOTIFIKASI
-                // ----------------------------------------------------
+                const startDraw = (e) => { isDrawing = true; draw(e); };
+                const endDraw = () => { isDrawing = false; if(ctx) ctx.beginPath(); };
+                const draw = (e) => {
+                    if (!isDrawing || !ctx) return;
+                    e.preventDefault(); 
+                    const canvas = document.getElementById('sigCanvas');
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                    const x = clientX - rect.left;
+                    const y = clientY - rect.top;
+                    
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                };
+
+                const handleUploadSig = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const maxW = 400; 
+                            const scale = img.width > maxW ? maxW / img.width : 1;
+                            canvas.width = img.width * scale;
+                            canvas.height = img.height * scale;
+                            const ctxTemp = canvas.getContext('2d');
+                            ctxTemp.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            
+                            const imgData = ctxTemp.getImageData(0, 0, canvas.width, canvas.height);
+                            const data = imgData.data;
+                            for (let i = 0; i < data.length; i += 4) {
+                                const r = data[i], g = data[i+1], b = data[i+2];
+                                if (r > 180 && g > 180 && b > 180) { 
+                                    data[i+3] = 0; 
+                                } else {
+                                    data[i] = Math.max(0, r - 30);
+                                    data[i+1] = Math.max(0, g - 30);
+                                    data[i+2] = Math.max(0, b - 30);
+                                }
+                            }
+                            ctxTemp.putImageData(imgData, 0, 0);
+                            signatureDataUrl.value = canvas.toDataURL('image/png');
+                            showSigModal.value = false;
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                };
+
                 let pollingInterval = null;
                 let isInitialLoad = true;
 
                 const checkNewEntries = (oldRows, newRows) => {
                     const oldIds = new Set(oldRows.map(r => r.id));
-                    // Cari row baru (id belum ada di oldRows), berstatus pending, dan bukan milik sendiri
                     const addedRows = newRows.filter(r => !oldIds.has(r.id) && (r.status || 'Pending') === 'Pending' && r.salesName !== currentUser.name);
-                    
                     if (addedRows.length > 0) {
-                        addedRows.forEach(r => {
-                            notifications.value.unshift({
-                                id: Date.now() + Math.random(),
-                                rowId: r.id,
-                                message: `Laporan baru dari ${r.salesName}`,
-                                city: r.city,
-                                date: r.date,
-                                read: false
-                            });
-                        });
-                        
-                        // Coba berikan notifikasi browser jika diizinkan
-                        if (Notification.permission === "granted") {
-                            new Notification("Laporan Baru", { body: `Ada ${addedRows.length} laporan baru yang menunggu validasi.` });
-                        }
+                        addedRows.forEach(r => { notifications.value.unshift({ id: Date.now() + Math.random(), rowId: r.id, message: `Laporan baru dari ${r.salesName}`, city: r.city, date: r.date, read: false }); });
+                        if (Notification.permission === "granted") { new Notification("Laporan Baru", { body: `Ada ${addedRows.length} laporan baru yang menunggu validasi.` }); }
                     }
                 };
 
                 const openFromNotif = (notif) => {
-                    notif.read = true;
-                    showNotifModal.value = false;
+                    notif.read = true; showNotifModal.value = false;
                     const targetRow = rows.value.find(r => r.id === notif.rowId);
-                    if (targetRow) {
-                        currentMenu.value = 'biaya_ops';
-                        setTimeout(() => openValidationModal(targetRow), 300);
-                    } else {
-                        alert("Data laporan tidak ditemukan. Mungkin sudah dihapus atau divalidasi.");
-                    }
+                    if (targetRow) { currentMenu.value = 'biaya_ops'; setTimeout(() => openValidationModal(targetRow), 300); } 
+                    else { alert("Data laporan tidak ditemukan. Mungkin sudah dihapus atau divalidasi."); }
                 };
 
-                const markAllNotifRead = () => {
-                    notifications.value.forEach(n => n.read = true);
-                };
+                const markAllNotifRead = () => { notifications.value.forEach(n => n.read = true); };
 
                 const silentSync = () => {
                     if(!currentUser.email || isLoading.value) return;
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'read', email: currentUser.email, userName: currentUser.name, role: currentUser.role })
-                    })
+                    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'read', email: currentUser.email, userName: currentUser.name, role: currentUser.role }) })
                     .then(res => res.json())
-                    .then(result => {
-                        if(result.status === 'success') {
-                            if (!isInitialLoad) checkNewEntries(rows.value, result.data);
-                            rows.value = result.data;
-                            isInitialLoad = false;
-                        }
-                    })
+                    .then(result => { if(result.status === 'success') { if (!isInitialLoad) checkNewEntries(rows.value, result.data); rows.value = result.data; isInitialLoad = false; } })
                     .catch(err => console.error("Auto sync gagal", err));
                 };
 
                 const startPolling = () => {
-                    // Cek auto sync tiap 30 detik untuk admin/kasir
                     if (currentUser.role === 'admin' || currentUser.role === 'kasir') {
-                        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-                            Notification.requestPermission();
-                        }
+                        if (Notification.permission !== "granted" && Notification.permission !== "denied") { Notification.requestPermission(); }
                         if (pollingInterval) clearInterval(pollingInterval);
                         pollingInterval = setInterval(silentSync, 30000); 
                     }
                 };
 
-                // ----------------------------------------------------
-                // FUNGSI SINKRONISASI DATA DARI CLOUD (Manual)
-                // ----------------------------------------------------
                 const syncData = () => {
                     if(!currentUser.email) return;
-                    isLoading.value = true;
-                    loadingMessage.value = "Sinkronisasi Cloud...";
-                    
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'read', email: currentUser.email, userName: currentUser.name, role: currentUser.role })
-                    })
+                    isLoading.value = true; loadingMessage.value = "Sinkronisasi Cloud...";
+                    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'read', email: currentUser.email, userName: currentUser.name, role: currentUser.role }) })
                     .then(res => res.json())
-                    .then(result => {
-                        isLoading.value = false;
-                        if(result.status === 'success') {
-                            if (!isInitialLoad) checkNewEntries(rows.value, result.data);
-                            rows.value = result.data;
-                            isInitialLoad = false;
-                        } else {
-                            alert("Gagal mengambil data dari server: " + result.message);
-                        }
-                    })
-                    .catch(err => { 
-                        isLoading.value = false; 
-                        console.error(err); 
-                        alert("Gagal koneksi ke server Cloud untuk sinkronisasi.");
-                    });
+                    .then(result => { isLoading.value = false; if(result.status === 'success') { if (!isInitialLoad) checkNewEntries(rows.value, result.data); rows.value = result.data; isInitialLoad = false; } else { alert("Gagal mengambil data dari server: " + result.message); } })
+                    .catch(err => { isLoading.value = false; console.error(err); alert("Gagal koneksi ke server Cloud untuk sinkronisasi."); });
                 };
 
                 onMounted(() => {
@@ -1089,7 +1127,7 @@
 
                             isInitialLoad = true;
                             syncData();
-                            startPolling(); // Mulai auto sync untuk notifikasi
+                            startPolling(); 
                         } else {
                             isLoggedIn.value = false;
                             if (pollingInterval) clearInterval(pollingInterval);
@@ -1111,11 +1149,7 @@
 
                 const handleLogout = () => { 
                     if(confirm('Yakin ingin keluar?')) { 
-                        signOut(auth).then(() => {
-                            isLoggedIn.value = false; loginForm.email = ''; loginForm.password = ''; rows.value = [];
-                            if (pollingInterval) clearInterval(pollingInterval);
-                            currentMenu.value = 'selection';
-                        });
+                        signOut(auth).then(() => { isLoggedIn.value = false; loginForm.email = ''; loginForm.password = ''; rows.value = []; if (pollingInterval) clearInterval(pollingInterval); currentMenu.value = 'selection'; });
                     } 
                 };
 
@@ -1123,121 +1157,45 @@
                 const openSettings = () => { showSettings.value = true; };
                 const saveSettings = () => { showSettings.value = false; };
 
-                // ----------------------------------------------------
-                // FUNGSI UPLOAD DATA KE CLOUD
-                // ----------------------------------------------------
                 const uploadToCloud = (dataToUpload, isEditMode = false) => {
                     if (!dataToUpload || dataToUpload.length === 0) return;
-                    
-                    isLoading.value = true;
-                    loadingMessage.value = isEditMode ? "Mengupdate ke Google Sheet..." : "Mengirim ke Google Sheet...";
-
+                    isLoading.value = true; loadingMessage.value = isEditMode ? "Mengupdate ke Google Sheet..." : "Mengirim ke Google Sheet...";
                     const r = dataToUpload[0];
-                    const payload = {
-                        action: 'write',
-                        data: {
-                            id: r.id.toString(),
-                            date: r.date, 
-                            salesName: isEditMode ? (r.salesName || header.salesName) : header.salesName, 
-                            unit: isEditMode ? (r.unit || header.unit) : header.unit,
-                            city: r.city, 
-                            customer: r.customer, 
-                            plateNo: r.plateNo || '-',
-                            fuelVol: r.fuelVol, 
-                            fuelKm: r.fuelKm,
-                            costFuel: parseVal(r.costFuel), 
-                            costParking: parseVal(r.costParking), 
-                            costToll: r.costToll,
-                            costMaintenance: parseVal(r.costMaintenance), 
-                            costPublicTransport: parseVal(r.costPublicTransport),
-                            costMeal: parseVal(r.costMeal), 
-                            costHotel: parseVal(r.costHotel), 
-                            costDriver: parseVal(r.costDriver),
-                            costEntertain: parseVal(r.costEntertain), 
-                            costOther: r.costOther, 
-                            total: r.total,
-                            originalTollList: r.originalTollList,
-                            originalOtherList: r.originalOtherList
-                        }
-                    };
-
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST', body: JSON.stringify(payload)
-                    })
+                    const payload = { action: 'write', data: { id: r.id.toString(), date: r.date, salesName: isEditMode ? (r.salesName || header.salesName) : header.salesName, unit: isEditMode ? (r.unit || header.unit) : header.unit, city: r.city, customer: r.customer, plateNo: r.plateNo || '-', fuelVol: r.fuelVol, fuelKm: r.fuelKm, costFuel: parseVal(r.costFuel), costParking: parseVal(r.costParking), costToll: r.costToll, costMaintenance: parseVal(r.costMaintenance), costPublicTransport: parseVal(r.costPublicTransport), costMeal: parseVal(r.costMeal), costHotel: parseVal(r.costHotel), costDriver: parseVal(r.costDriver), costEntertain: parseVal(r.costEntertain), costOther: r.costOther, total: r.total, originalTollList: r.originalTollList, originalOtherList: r.originalOtherList } };
+                    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
                     .then(response => response.json())
-                    .then(result => {
-                        isLoading.value = false;
-                        if (result && result.status === 'success') {
-                            alert("Berhasil!\n" + result.message);
-                            isInitialLoad = true; 
-                            syncData(); // Re-sync agar mendapatkan copy bersih dari server
-                        } else { alert("Gagal dari server:\n" + (result ? result.message : 'Unknown Error')); }
-                    })
-                    .catch(error => {
-                        isLoading.value = false;
-                        console.error('Error detail:', error);
-                        alert("Gagal Terhubung ke Google Sheet.\nPastikan Internet Anda menyala dan stabil.");
-                    });
+                    .then(result => { isLoading.value = false; if (result && result.status === 'success') { alert("Berhasil!\n" + result.message); isInitialLoad = true; syncData(); } else { alert("Gagal dari server:\n" + (result ? result.message : 'Unknown Error')); } })
+                    .catch(error => { isLoading.value = false; console.error('Error detail:', error); alert("Gagal Terhubung ke Google Sheet.\nPastikan Internet Anda menyala dan stabil."); });
                 };
 
-                // ----------------------------------------------------
-                // VALIDASI LOGIC (KHUSUS ADMIN & KASIR)
-                // ----------------------------------------------------
                 const showValidationModal = ref(false);
                 const selectedRow = ref({});
 
                 const openValidationModal = (row) => { selectedRow.value = row; showValidationModal.value = true; };
-                
                 const submitValidation = (newStatus) => {
                     isLoading.value = true; loadingMessage.value = "Mengubah Status...";
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST', body: JSON.stringify({ action: 'validate', id: selectedRow.value.id, newStatus: newStatus })
-                    })
+                    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'validate', id: selectedRow.value.id, newStatus: newStatus }) })
                     .then(res => res.json())
-                    .then(result => { 
-                        isLoading.value = false; 
-                        showValidationModal.value = false; 
-                        isInitialLoad = true;
-                        syncData(); 
-                    })
+                    .then(result => { isLoading.value = false; showValidationModal.value = false; isInitialLoad = true; syncData(); })
                     .catch(err => { isLoading.value = false; alert("Gagal update status."); });
                 };
 
-                // ----------------------------------------------------
-                // FUNGSI UMUM FORM BIAYA OPERASIONAL
-                // ----------------------------------------------------
                 const showForm = ref(false);
                 const isEditing = ref(false);
                 const editingId = ref(null);
                 
                 const form = reactive({ date: new Date().toISOString().split('T')[0], city: '', fuelVol: '', fuelKm: '', costFuel: '', costParking: '', costMaintenance: '', costPublicTransport: '', costMeal: '', costHotel: '', costDriver: '', costEntertain: '', plateNo: '', customer: '' });
+                const customerList = ref([{ name: '' }]);
                 const tollList = ref([{ name: '', cost: '' }]); const otherList = ref([{ name: '', cost: '' }]); 
                 const costFields = { costParking: 'Parkir', costMaintenance: 'Perbaikan Mobil', costPublicTransport: 'Trans. Umum', costMeal: 'Uang Makan', costHotel: 'Hotel', costDriver: 'Extra Supir', costEntertain: 'Entertain' };
 
                 const parseVal = (val) => { if (!val) return 0; if (typeof val === 'number') return val; return parseInt(val.replace(/\./g, '')) || 0; };
-                
-                const formatVal = (num) => { 
-                    if (!num && num !== 0) return ''; 
-                    let str = String(num).replace(/\D/g, ''); 
-                    if (!str) return '';
-                    return str.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
-                };
-                
-                const formatDateID = (dateString) => { 
-                    if (!dateString) return ''; 
-                    let str = String(dateString);
-                    if (str.includes('undefined')) str = str.replace(/undefined\//g, '');
-                    if (str.includes('/')) return str; 
-                    const parts = str.split('T')[0].split('-'); 
-                    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; 
-                    return str; 
-                };
-
+                const formatVal = (num) => { if (!num && num !== 0) return ''; let str = String(num).replace(/\D/g, ''); if (!str) return ''; return str.replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+                const formatDateID = (dateString) => { if (!dateString) return ''; let str = String(dateString); if (str.includes('undefined')) str = str.replace(/undefined\//g, ''); if (str.includes('/')) return str; const parts = str.split('T')[0].split('-'); if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`; return str; };
                 const formatInput = (e, key) => { form[key] = formatVal(e.target.value); };
                 const formatHeaderKasbon = (e) => { header.kasbon = formatVal(e.target.value); };
                 const formatKasbonNominal = (e) => { kasbonForm.jumlahFormatted = formatVal(e.target.value); kasbonForm.jumlah = parseVal(kasbonForm.jumlahFormatted); };
                 const formatPpdBiaya = (e) => { ppdForm.biayaFormatted = formatVal(e.target.value); ppdForm.biaya = parseVal(ppdForm.biayaFormatted); };
-                
                 const formatTollInput = (e, index) => { tollList.value[index].cost = formatVal(e.target.value); };
                 const formatOtherInput = (e, index) => { otherList.value[index].cost = formatVal(e.target.value); };
 
@@ -1259,6 +1217,8 @@
                 };
 
                 const resetReport = () => { if (confirm('⚠️ Hapus riwayat dari memori perangkat ini?')) { rows.value = []; localStorage.removeItem('salesAppRows'); header.kasbon = ''; } };
+                const addCustomer = () => customerList.value.push({ name: '' });
+                const removeCustomer = (i) => customerList.value.splice(i, 1);
                 const addToll = () => tollList.value.push({ name: '', cost: '' });
                 const removeToll = (i) => tollList.value.splice(i, 1);
                 const addOther = () => otherList.value.push({ name: '', cost: '' });
@@ -1271,161 +1231,78 @@
                 const requestDelete = (id) => { deleteType.value = 'single'; deleteTargetId.value = id; showDeleteModal.value = true; };
                 const confirmClear = () => { deleteType.value = 'all'; showDeleteModal.value = true; };
                 
-                // MENGEMBALIKAN FUNGSI HAPUS KE GOOGLE SCRIPT (Cloud Delete)
                 const executeDelete = () => { 
                     showDeleteModal.value = false;
                     isLoading.value = true;
                     loadingMessage.value = "Menghapus data di Cloud...";
 
                     let idsToDelete = [];
-                    if (deleteType.value === 'all') {
-                        // Jika ada filter aktif, hapus hanya data yang terfilter, jika tidak hapus semua milik user
-                        idsToDelete = filteredRows.value.map(r => r.id.toString());
-                    } else {
-                        idsToDelete = [deleteTargetId.value.toString()];
-                    }
+                    if (deleteType.value === 'all') { idsToDelete = filteredRows.value.map(r => r.id.toString()); } 
+                    else { idsToDelete = [deleteTargetId.value.toString()]; }
 
-                    if(idsToDelete.length === 0) {
-                        isLoading.value = false;
-                        return;
-                    }
+                    if(idsToDelete.length === 0) { isLoading.value = false; return; }
 
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST', 
-                        body: JSON.stringify({ action: 'delete', ids: idsToDelete })
-                    })
+                    fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', ids: idsToDelete }) })
                     .then(res => res.json())
                     .then(result => {
                         isLoading.value = false;
                         if(result.status === 'success') {
-                            // Hapus secara lokal agar UI langsung update tanpa nunggu sync
                             if (deleteType.value === 'all') {
-                                if (filterDateStart.value || filterDateEnd.value || searchQuery.value || filterStatus.value || filterKaryawan.value) { 
-                                    rows.value = rows.value.filter(row => !filteredRows.value.includes(row)); 
-                                } else { 
-                                    rows.value = []; 
-                                }
+                                if (filterDateStart.value || filterDateEnd.value || searchQuery.value || filterStatus.value || filterKaryawan.value) { rows.value = rows.value.filter(row => !filteredRows.value.includes(row)); } 
+                                else { rows.value = []; }
                             } else {
                                 const index = rows.value.findIndex(r => r.id === deleteTargetId.value); 
                                 if (index !== -1) rows.value.splice(index, 1);
                             }
                             alert("Data berhasil dihapus dari Cloud.");
-                        } else {
-                            alert("Gagal menghapus data: " + result.message);
-                        }
+                        } else { alert("Gagal menghapus data: " + result.message); }
                     })
-                    .catch(err => {
-                        isLoading.value = false;
-                        alert("Gagal koneksi ke server saat menghapus.");
-                    });
+                    .catch(err => { isLoading.value = false; alert("Gagal koneksi ke server saat menghapus."); });
                 };
                 
                 const editRow = (row) => { 
                     isEditing.value = true; editingId.value = row.id; 
-                    
                     resetForm();
-                    form.city = row.city || ''; 
-                    form.customer = row.customer || '';
-                    form.plateNo = row.plateNo || ''; 
-                    form.fuelVol = row.fuelVol || ''; 
-                    form.fuelKm = row.fuelKm || ''; 
+                    form.city = row.city || ''; form.plateNo = row.plateNo || ''; form.fuelVol = row.fuelVol || ''; form.fuelKm = row.fuelKm || ''; 
+                    let d = row.rawDate || row.date; if (d && String(d).includes('/')) { let clean = String(d).replace(/undefined\//g, ''); const p = clean.split('/'); if (p.length === 3) d = `${p[2]}-${p[1]}-${p[0]}`; } form.date = d;
+                    form.costFuel = formatVal(row.costFuel); form.costParking = formatVal(row.costParking); form.costMaintenance = formatVal(row.costMaintenance); form.costPublicTransport = formatVal(row.costPublicTransport); form.costMeal = formatVal(row.costMeal); form.costHotel = formatVal(row.costHotel); form.costDriver = formatVal(row.costDriver); form.costEntertain = formatVal(row.costEntertain);
                     
-                    let d = row.rawDate || row.date; 
-                    if (d && String(d).includes('/')) {
-                        let clean = String(d).replace(/undefined\//g, '');
-                        const p = clean.split('/');
-                        if (p.length === 3) d = `${p[2]}-${p[1]}-${p[0]}`;
-                    }
-                    form.date = d;
-                    
-                    form.costFuel = formatVal(row.costFuel);
-                    form.costParking = formatVal(row.costParking);
-                    form.costMaintenance = formatVal(row.costMaintenance);
-                    form.costPublicTransport = formatVal(row.costPublicTransport);
-                    form.costMeal = formatVal(row.costMeal);
-                    form.costHotel = formatVal(row.costHotel);
-                    form.costDriver = formatVal(row.costDriver);
-                    form.costEntertain = formatVal(row.costEntertain);
-                    
-                    let parsedToll = [];
-                    if (typeof row.originalTollList === 'string') {
-                        try { parsedToll = JSON.parse(row.originalTollList); } catch(e) {}
-                    } else if (Array.isArray(row.originalTollList)) {
-                        parsedToll = row.originalTollList;
-                    }
-                    
-                    if (parsedToll && parsedToll.length > 0 && parsedToll[0].name !== undefined) {
-                        tollList.value = JSON.parse(JSON.stringify(parsedToll));
-                    } else if (parseVal(row.costToll) > 0) {
-                        tollList.value = [{ name: 'Tol (Data Lama)', cost: row.costToll }];
-                    } else {
-                        tollList.value = [{ name: '', cost: '' }];
-                    }
+                    if (row.originalCustomerList && Array.isArray(row.originalCustomerList) && row.originalCustomerList.length > 0) { customerList.value = JSON.parse(JSON.stringify(row.originalCustomerList)); } 
+                    else if (row.customer) { customerList.value = [{ name: row.customer }]; } 
+                    else { customerList.value = [{ name: '' }]; }
+
+                    let parsedToll = []; if (typeof row.originalTollList === 'string') { try { parsedToll = JSON.parse(row.originalTollList); } catch(e) {} } else if (Array.isArray(row.originalTollList)) { parsedToll = row.originalTollList; }
+                    if (parsedToll && parsedToll.length > 0 && parsedToll[0].name !== undefined) { tollList.value = JSON.parse(JSON.stringify(parsedToll)); } else if (parseVal(row.costToll) > 0) { tollList.value = [{ name: 'Tol (Data Lama)', cost: row.costToll }]; } else { tollList.value = [{ name: '', cost: '' }]; }
                     tollList.value.forEach(t => { t.cost = formatVal(t.cost); });
                     
-                    let parsedOther = [];
-                    if (typeof row.originalOtherList === 'string') {
-                        try { parsedOther = JSON.parse(row.originalOtherList); } catch(e) {}
-                    } else if (Array.isArray(row.originalOtherList)) {
-                        parsedOther = row.originalOtherList;
-                    }
-                    
-                    if (parsedOther && parsedOther.length > 0 && parsedOther[0].name !== undefined) {
-                        otherList.value = JSON.parse(JSON.stringify(parsedOther));
-                    } else if (parseVal(row.costOther) > 0) {
-                        otherList.value = [{ name: 'Lain-lain (Data Lama)', cost: row.costOther }];
-                    } else {
-                        otherList.value = [{ name: '', cost: '' }];
-                    }
+                    let parsedOther = []; if (typeof row.originalOtherList === 'string') { try { parsedOther = JSON.parse(row.originalOtherList); } catch(e) {} } else if (Array.isArray(row.originalOtherList)) { parsedOther = row.originalOtherList; }
+                    if (parsedOther && parsedOther.length > 0 && parsedOther[0].name !== undefined) { otherList.value = JSON.parse(JSON.stringify(parsedOther)); } else if (parseVal(row.costOther) > 0) { otherList.value = [{ name: 'Lain-lain (Data Lama)', cost: row.costOther }]; } else { otherList.value = [{ name: '', cost: '' }]; }
                     otherList.value.forEach(o => { o.cost = formatVal(o.cost); });
 
                     showForm.value = true; 
                 };
                 
                 const resetForm = () => { 
-                    form.city = ''; form.fuelVol = ''; form.fuelKm = ''; form.costFuel = ''; form.costParking = ''; form.plateNo = ''; form.customer = '';
+                    form.city = ''; form.fuelVol = ''; form.fuelKm = ''; form.costFuel = ''; form.costParking = ''; form.plateNo = ''; customerList.value = [{ name: '' }];
                     Object.keys(costFields).forEach(k => form[k] = ''); 
                     tollList.value = [{ name: '', cost: '' }]; otherList.value = [{ name: '', cost: '' }]; 
                 };
 
                 const saveEntry = () => {
                     if (!form.city.trim()) { alert("Kota Tujuan wajib diisi!"); return; }
-                    
                     const existingRow = isEditing.value ? rows.value.find(r => r.id === editingId.value) : null;
-                    
                     const rowData = { 
-                        ...form, 
-                        id: isEditing.value ? editingId.value : Date.now(), 
-                        customer: form.customer || '-', 
-                        costToll: totalTollCost.value, 
-                        costOther: totalOtherCost.value, 
-                        total: currentFormTotal.value, 
-                        plateNo: form.plateNo || '-', 
-                        originalTollList: JSON.parse(JSON.stringify(tollList.value)), 
-                        originalOtherList: JSON.parse(JSON.stringify(otherList.value)),
-                        rawDate: form.date, 
-                        date: form.date, 
-                        salesName: isEditing.value ? (existingRow?.salesName || header.salesName) : header.salesName,
-                        unit: isEditing.value ? (existingRow?.unit || header.unit) : header.unit,
-                        status: 'Pending'
+                        ...form, id: isEditing.value ? editingId.value : Date.now(), 
+                        customer: customerList.value.map(c => c.name.trim()).filter(n => n).join(', ') || '-', 
+                        costToll: totalTollCost.value, costOther: totalOtherCost.value, total: currentFormTotal.value, plateNo: form.plateNo || '-', 
+                        originalCustomerList: JSON.parse(JSON.stringify(customerList.value)), originalTollList: JSON.parse(JSON.stringify(tollList.value)), originalOtherList: JSON.parse(JSON.stringify(otherList.value)),
+                        rawDate: form.date, date: form.date, salesName: isEditing.value ? (existingRow?.salesName || header.salesName) : header.salesName, unit: isEditing.value ? (existingRow?.unit || header.unit) : header.unit, status: 'Pending'
                     };
-                    
-                    if (isEditing.value) { 
-                        const idx = rows.value.findIndex(r => r.id === editingId.value); 
-                        if (idx !== -1) rows.value[idx] = rowData; 
-                    } else { 
-                        rows.value.unshift(rowData); 
-                    }
-                    
-                    uploadToCloud([rowData], isEditing.value);
-                    showForm.value = false; 
-                    resetForm();
+                    if (isEditing.value) { const idx = rows.value.findIndex(r => r.id === editingId.value); if (idx !== -1) rows.value[idx] = rowData; } else { rows.value.unshift(rowData); }
+                    uploadToCloud([rowData], isEditing.value); showForm.value = false; resetForm();
                 };
 
-                // --- PENGATURAN FONT GLOBAL UNTUK jsPDF ---
-                const setupPdfFont = (doc) => {
-                    doc.setFont("helvetica"); 
-                };
+                const setupPdfFont = (doc) => { doc.setFont("helvetica"); };
 
                 // ===============================================
                 // GENERATE PDF KASBON (BSK)
@@ -1447,7 +1324,7 @@
                     doc.setLineWidth(0.6);
                     doc.line(105 - (judulWidth/2), 31, 105 + (judulWidth/2), 31);
 
-                    doc.setFontSize(14); 
+                    doc.setFontSize(14); doc.setFont(undefined, "normal");
                     doc.text("PWK - JATENG", 105, 38, {align: "center"}); 
                     const pwkWidth = doc.getTextWidth("PWK - JATENG");
                     doc.setLineWidth(0.4);
@@ -1496,34 +1373,35 @@
                     const agusText = "AGUS RIYANTO";
                     const pemohonText = currentUser.name.toUpperCase();
 
-                    doc.setFont(undefined, "normal");
-                    doc.text(marisText, 40, nameY, {align: "center"});
-                    // let wM = doc.getTextWidth(marisText);
-                    // doc.setLineWidth(0.2);
-                    // doc.line(40 - (wM/2), nameY+1, 40 + (wM/2), nameY+1);
+                    // --- INJECT SIGNATURE GAMBAR (KASBON) ---
+                    if (signatureDataUrl.value) {
+                        doc.addImage(signatureDataUrl.value, 'PNG', 160 - 15, nameY - 18, 30, 15);
+                    }
 
-                    doc.setFont(undefined, "bold"); 
+                    doc.setFont(undefined, "bold"); // BOLD SEMUA NAMA
+
+                    // --- MARIS ---
+                    doc.text(marisText, 40, nameY, {align: "center"});
+                    let wM = doc.getTextWidth(marisText);
+                    doc.setLineWidth(0.2);
+                    doc.line(40 - (wM/2), nameY+1, 40 + (wM/2), nameY+1);
+
+                    // --- AGUS ---
                     doc.text(agusText, 100, nameY, {align: "center"});
                     let wA = doc.getTextWidth(agusText);
-                    doc.line(100 - (wA/2), nameY+1, 100 + (wA/2), nameY+1);
+                    doc.line(100 - (wA/2), nameY+1, 100 + (wA/2), nameY+1); 
 
-                    doc.setFont(undefined, "normal");
+                    // --- PEMOHON ---
                     doc.text(pemohonText, 160, nameY, {align: "center"});
-                    // let wP = doc.getTextWidth(pemohonText);
-                    // doc.line(160 - (wP/2), nameY+1, 160 + (wP/2), nameY+1);
+                    let wP = doc.getTextWidth(pemohonText);
+                    doc.line(160 - (wP/2), nameY+1, 160 + (wP/2), nameY+1);
 
+                    // JABATAN (TIDAK BOLD, Title Case)
+                    doc.setFont(undefined, "normal");
                     doc.text("Kasir", 40, nameY+6, {align: "center"});
                     doc.text("Assistant Sales Manager", 100, nameY+6, {align: "center"}); 
                     
-                    // TITLE CASE JABATAN
-                    const toTitleCase = (str) => {
-                        return str.replace(
-                            /\w\S*/g,
-                            function(txt) {
-                                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-                            }
-                        );
-                    };
+                    const toTitleCase = (str) => { return str.replace(/\w\S*/g, function(txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); }); };
                     doc.text(`${toTitleCase(currentUser.unit.split('/')[0].trim())}`, 160, nameY+6, {align: "center"});
                     
                     const bottomY = nameY + 20;
@@ -1549,11 +1427,9 @@
                     const doc = new jsPDF('portrait', 'mm', 'a4');
                     setupPdfFont(doc);
 
-                    doc.setFontSize(18); 
-                    doc.setFont(undefined, "bold");
+                    doc.setFontSize(18); doc.setFont(undefined, "bold");
                     doc.text("PENGAJUAN PERJALANAN DINAS", 105, 20, {align: "center"});
-                    
-                    doc.setFontSize(14); 
+                    doc.setFontSize(14); doc.setFont(undefined, "normal");
                     doc.text("PWK - JATENG", 105, 28, {align: "center"});
 
                     const tglMulaiStr = formatDateToDisplay(ppdForm.tglMulai);
@@ -1568,9 +1444,13 @@
                     doc.text("Tujuan dan Lama Perjalanan", 15, startY); doc.text(`: ${ppdForm.tujuan.toUpperCase()}`, 70, startY); startY += 8;
                     doc.text("Perkiraan Biaya", 15, startY); doc.text(`: RP ${ppdForm.biayaFormatted}`, 70, startY); startY += 8;
                     doc.text("Transportasi", 15, startY); doc.text(`: ${ppdForm.transportasi.toUpperCase()}`, 70, startY); startY += 8;
-                    doc.text("Keperluan", 15, startY); doc.text(`: ${ppdForm.keperluan.toUpperCase()}`, 70, startY); 
+                    doc.text("Keperluan", 15, startY); 
                     
-                    startY += 20;
+                    // Handle multi-line for Keperluan to prevent overlap
+                    const splitKeperluan = doc.splitTextToSize(`: ${ppdForm.keperluan.toUpperCase()}`, 125);
+                    doc.text(splitKeperluan, 70, startY);
+                    startY += (splitKeperluan.length * 5) + 12; // Adjust startY based on multi-line text
+
                     doc.setFont(undefined, "bold");
                     doc.text("LAMPIRAN IJIN PERJALANAN DINAS LUAR KOTA", 15, startY);
                     
@@ -1578,23 +1458,39 @@
                     const body = ppdForm.jadwal.map(j => [formatDateToShort(j.tgl), j.kota.toUpperCase(), j.perusahaan.toUpperCase(), j.keperluan.toUpperCase(), j.omzet.toUpperCase()]);
 
                     doc.autoTable({
-                        startY: startY + 5, head: head, body: body, theme: 'plain',
-                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 3 },
+                        startY: startY + 5, 
+                        head: head, 
+                        body: body, 
+                        theme: 'plain',
+                        // MENGECILKAN BARIS/SPASI PADA PPD: cellPadding diatur ke nilai sangat kecil
+                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 1, minCellHeight: 6 },
                         headStyles: { fillColor: [255,255,255], textColor: [0,0,0], halign: 'center', fontStyle: 'bold' },
-                        columnStyles: { 0: {cellWidth: 20}, 1: {cellWidth: 30}, 2: {cellWidth: 55}, 3: {cellWidth: 45} }
+                        columnStyles: { 0: {cellWidth: 20}, 1: {cellWidth: 30}, 2: {cellWidth: 55}, 3: {cellWidth: 45} },
+                        // Mengatur agar tabel bisa berpindah halaman jika terlalu panjang
+                        margin: { bottom: 60 }, // Berikan margin bawah yang cukup untuk tanda tangan jika di halaman yang sama, atau pindah halaman jika mepet
+                        pageBreak: 'auto',
+                        showHead: 'everyPage'
                     });
 
+                    // Cek apakah sisa ruang cukup untuk bagian tanda tangan (butuh sekitar 60mm)
+                    // Jika tidak cukup, tambahkan halaman baru
                     let finalY = doc.lastAutoTable.finalY + 15;
+                    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+                    
+                    if (finalY + 60 > pageHeight) {
+                        doc.addPage();
+                        finalY = 20; // Reset Y ke atas halaman baru
+                    }
+
                     doc.setFont(undefined, "normal");
                     doc.text("Saran dari atasan:", 15, finalY);
                     doc.text(".......................................................................................................................................", 45, finalY);
 
                     // =========================================================================
-                    // TANDA TANGAN PPD
+                    // TANDA TANGAN PPD DENGAN BOLD + UNDERSCORE KEDUANYA + GAMBAR TTD
                     // =========================================================================
                     finalY += 20;
                     const printDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
-                    
                     doc.text(`KUDUS, ${printDateStr}`, 150, finalY, {align: "center"});
                     
                     finalY += 10;
@@ -1603,27 +1499,33 @@
 
                     finalY += 30;
                     const agusText = "AGUS RIYANTO";
-                    const pemohonName = currentUser.name.toUpperCase(); // TANPA KURUNG
+                    const pemohonName = currentUser.name.toUpperCase();
 
-                    doc.setFont(undefined, "bold");
+                    // --- INJECT SIGNATURE GAMBAR ---
+                    if (signatureDataUrl.value) {
+                        doc.addImage(signatureDataUrl.value, 'PNG', 150 - 15, finalY - 18, 30, 15);
+                    }
+
+                    doc.setFont(undefined, "bold"); // BOLD SEMUA NAMA
+
+                    // --- AGUS (PPD) ---
                     doc.text(agusText, 50, finalY, {align: "center"});
                     let wAp = doc.getTextWidth(agusText);
                     doc.setLineWidth(0.2);
                     doc.line(50 - (wAp/2), finalY+1, 50 + (wAp/2), finalY+1);
 
-                    doc.setFont(undefined, "normal");
+                    // --- PEMOHON (PPD) ---
                     doc.text(pemohonName, 150, finalY, {align: "center"});
-                    // let wPp = doc.getTextWidth(pemohonName);
-                    // doc.line(150 - (wPp/2), finalY+1, 150 + (wPp/2), finalY+1);
+                    let wPp = doc.getTextWidth(pemohonName);
+                    doc.line(150 - (wPp/2), finalY+1, 150 + (wPp/2), finalY+1);
+                    
+                    doc.setFont(undefined, "normal"); // KEMBALI NORMAL
                     
                     // TITLE CASE JABATAN
                     const toTitleCase = (str) => {
-                        return str.replace(
-                            /\w\S*/g,
-                            function(txt) {
-                                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-                            }
-                        );
+                        return str.replace(/\w\S*/g, function(txt) {
+                            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                        });
                     };
 
                     doc.text("Assistant Sales Manager", 50, finalY+6, {align: "center"});
@@ -1634,42 +1536,34 @@
 
                 const exportAction = (type) => {
                     const dataToExport = [...filteredRows.value].sort((a, b) => new Date(a.date) - new Date(b.date));
-                    
                     if (dataToExport.length === 0) { alert("Data (terfilter) kosong!"); return; }
                     const fileName = `Laporan Biaya Ops_${header.salesName || 'Karyawan'}_${new Date().toLocaleDateString('id-ID').replace(/\//g, '-')}`;
                     let sumVol = 0, sumFuel = 0, sumParking = 0, sumToll = 0, sumMaint = 0, sumTrans = 0, sumMeal = 0, sumHotel = 0, sumDriver = 0, sumEntertain = 0, sumOther = 0;
                     
-                    const getTollString = (r, separator = '\n') => {
-                        if (parseVal(r.costToll) <= 0) return '';
+                    const getTollString = (r, separator = '\n') => { 
+                        if (parseVal(r.costToll) <= 0) return ''; 
                         let arr = [];
-                        if (typeof r.originalTollList === 'string') { try { arr = JSON.parse(r.originalTollList); } catch(e){} } else if (Array.isArray(r.originalTollList)) { arr = r.originalTollList; }
-                        const details = arr.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
-                        return details ? `${details}${separator}Total: ${formatVal(r.costToll)}` : formatVal(r.costToll);
+                        if (typeof r.originalTollList === 'string') { try { arr = JSON.parse(r.originalTollList); } catch(e){} } 
+                        else if (Array.isArray(r.originalTollList)) { arr = r.originalTollList; }
+                        const details = arr?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator); 
+                        return details ? `${details}${separator}Total: ${formatVal(r.costToll)}` : formatVal(r.costToll); 
                     };
-                    const getOtherString = (r, separator = '\n') => {
-                        if (parseVal(r.costOther) <= 0) return '';
+                    const getOtherString = (r, separator = '\n') => { 
+                        if (parseVal(r.costOther) <= 0) return ''; 
                         let arr = [];
-                        if (typeof r.originalOtherList === 'string') { try { arr = JSON.parse(r.originalOtherList); } catch(e){} } else if (Array.isArray(r.originalOtherList)) { arr = r.originalOtherList; }
-                        const details = arr.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator);
-                        return details ? `${details}${separator}Total: ${formatVal(r.costOther)}` : formatVal(r.costOther);
+                        if (typeof r.originalOtherList === 'string') { try { arr = JSON.parse(r.originalOtherList); } catch(e){} } 
+                        else if (Array.isArray(r.originalOtherList)) { arr = r.originalOtherList; }
+                        const details = arr?.filter(t => parseVal(t.cost) > 0).map(t => `${t.name}: ${t.cost}`).join(separator); 
+                        return details ? `${details}${separator}Total: ${formatVal(r.costOther)}` : formatVal(r.costOther); 
                     };
-
                     dataToExport.forEach(r => { sumVol += parseFloat(r.fuelVol) || 0; sumFuel += parseVal(r.costFuel); sumParking += parseVal(r.costParking); sumToll += r.costToll; sumMaint += parseVal(r.costMaintenance); sumTrans += parseVal(r.costPublicTransport); sumMeal += parseVal(r.costMeal); sumHotel += parseVal(r.costHotel); sumDriver += parseVal(r.costDriver); sumEntertain += parseVal(r.costEntertain); sumOther += r.costOther; });
 
                     if (type === 'pdf') {
                         if (!window.jspdf) { alert("Library PDF belum siap!"); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape');
                         setupPdfFont(doc);
-
-                        // --- PERBAIKAN FONT DAN SPASI UNTUK MENCEGAH RUSAK SAAT MULTI PAGE ---
-                        doc.setFontSize(14); // Diperkecil dari 16
-                        doc.setFont(undefined, 'bold'); 
-                        doc.text("LAPORAN BIAYA OPERASIONAL", 14, 15); // Margin atas diperkecil
+                        doc.setFontSize(14); doc.setFont(undefined, 'bold'); doc.text("LAPORAN BIAYA OPERASIONAL", 14, 15); 
+                        doc.setFontSize(9); doc.setFont(undefined, 'normal'); doc.text(`NAMA : ${header.salesName || '-'}`, 14, 22); doc.text(`UNIT : ${header.unit || '-'}`, 14, 27);
                         
-                        doc.setFontSize(9); // Diperkecil dari 10
-                        doc.setFont(undefined, 'normal');
-                        doc.text(`NAMA : ${header.salesName || '-'}`, 14, 22); 
-                        doc.text(`UNIT : ${header.unit || '-'}`, 14, 27);
-
                         const tableHeaders = [
                             [
                                 { content: 'No.', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
@@ -1690,7 +1584,7 @@
                             ],
                             ['Vol.', 'Km', 'Rp.']
                         ];
-
+                        
                         const tableBody = [];
                         dataToExport.forEach((r, i) => {
                             tableBody.push([
@@ -1717,39 +1611,67 @@
                             ]);
                         });
 
-                        doc.autoTable({
-                            head: tableHeaders,
-                            body: tableBody,
-                            startY: 32, // Mulai tabel lebih atas
-                            theme: 'plain',
-                            // Margin tabel dikurangi agar muat lebih banyak per halaman
-                            margin: { top: 30, right: 10, bottom: 20, left: 10 },
-                            styles: { font: 'helvetica', fontSize: 6, lineColor: [0, 0, 0], lineWidth: 0.1, valign: 'middle', cellPadding: 1 }, // Font & Padding diperkecil
-                            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', lineWidth: 0.1 },
-                            columnStyles: { 0: { halign: 'center', cellWidth: 8 }, 3: { cellWidth: 26 }, 6: { cellWidth: 16 }, 8: { cellWidth: 26 }, 9: { cellWidth: 14 }, 10: { cellWidth: 14 }, 13: { cellWidth: 16 } },
-                            foot: [[
+                        doc.autoTable({ 
+                            head: tableHeaders, 
+                            body: tableBody, 
+                            startY: 32, 
+                            theme: 'plain', 
+                            margin: { top: 30, right: 10, bottom: 20, left: 10 }, 
+                            styles: { font: 'helvetica', fontSize: 6, lineColor: [0, 0, 0], lineWidth: 0.1, valign: 'middle', cellPadding: 1 }, 
+                            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', lineWidth: 0.1 }, 
+                            columnStyles: { 0: { halign: 'center', cellWidth: 8 }, 3: { cellWidth: 26 }, 6: { cellWidth: 16 }, 8: { cellWidth: 26 }, 9: { cellWidth: 14 }, 10: { cellWidth: 14 }, 13: { cellWidth: 16 } }, 
+                            foot: [[ 
                                 { content: 'TOTAL', colSpan: 4, styles: { halign: 'center', fontStyle: 'bold' } }, 
-                                sumVol.toFixed(1).replace('.', ','), "", formatVal(sumFuel), formatVal(sumParking), formatVal(sumToll), formatVal(sumMaint), formatVal(sumTrans), formatVal(sumMeal), formatVal(sumHotel), formatVal(sumDriver), formatVal(sumEntertain), formatVal(sumOther), formatVal(grandTotal.value)
+                                sumVol.toFixed(1).replace('.', ','), "", formatVal(sumFuel), formatVal(sumParking), formatVal(sumToll), formatVal(sumMaint), formatVal(sumTrans), formatVal(sumMeal), formatVal(sumHotel), formatVal(sumDriver), formatVal(sumEntertain), formatVal(sumOther), formatVal(grandTotal.value) 
                             ]], 
                             footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'right' } 
                         });
                         
                         const finalY = doc.lastAutoTable.finalY + 8; 
-                        doc.setFontSize(8); // Font footer diperkecil sedikit
-                        doc.text("Total yang telah dikeluarkan", 180, finalY + 4); doc.text(":", 230, finalY + 4); doc.text(formatCurrency(grandTotal.value), 270, finalY + 4, { align: 'right' }); 
-                        doc.text("Kasbon", 180, finalY + 9); doc.text(":", 230, finalY + 9); doc.text(formatCurrency(parseVal(header.kasbon)), 270, finalY + 9, { align: 'right' }); 
-                        doc.text("Sisa lebih / kurang", 180, finalY + 14); doc.text(":", 230, finalY + 14); doc.text(formatCurrency(balance.value), 270, finalY + 14, { align: 'right' }); 
+                        doc.setFontSize(8); 
+                        doc.text("Total yang telah dikeluarkan", 180, finalY + 4); 
+                        doc.text(":", 230, finalY + 4); 
+                        doc.text(formatCurrency(grandTotal.value), 270, finalY + 4, { align: 'right' }); 
+                        doc.text("Kasbon", 180, finalY + 9); 
+                        doc.text(":", 230, finalY + 9); 
+                        doc.text(formatCurrency(parseVal(header.kasbon)), 270, finalY + 9, { align: 'right' }); 
+                        doc.text("Sisa lebih / kurang", 180, finalY + 14); 
+                        doc.text(":", 230, finalY + 14); 
+                        doc.text(formatCurrency(balance.value), 270, finalY + 14, { align: 'right' }); 
                         
-                        const sigY = finalY + 30;
-                        const printDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                        doc.setFont(undefined, 'normal');
-                        doc.text(`Kudus, ${printDateStr}`, 250, sigY, { align: 'center' });
-                        doc.text("Dibuat Oleh,", 250, sigY + 4, { align: 'center' });
-                        doc.setFont(undefined, 'bold');
+                        const sigY = finalY + 30; 
+                        const printDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); 
+                        doc.setFont(undefined, 'normal'); 
+                        doc.text(`Kudus, ${printDateStr}`, 250, sigY, { align: 'center' }); 
+                        doc.text("Dibuat Oleh,", 250, sigY + 4, { align: 'center' }); 
+                        doc.setFont(undefined, 'bold'); 
                         doc.text(`( ${header.salesName || 'Karyawan'} )`, 250, sigY + 20, { align: 'center' });
-
+                        
                         doc.save(`${fileName}.pdf`);
                     
+                    } else if (type === 'excel') {
+                        if (!window.XLSX) { alert("Library Excel belum siap!"); return; }
+                        const wsData = [ ["LAPORAN BIAYA OPERASIONAL"], [`NAMA KARYAWAN : ${header.salesName}`], [`UNIT : ${header.unit}`], [], ["No.", "Tgl.", "Kota Tujuan", "Customer", "BBM", "", "", "Parkir", "Tol", "Perbaikan Mobil", "Transportasi Umum", "Uang Makan", "Hotel", "Extra Supir", "Entertain", "Lain-lain", "Jumlah"], ["", "", "", "", "Vol.", "Km", "Rp.", "", "", "", "", "", "", "", "", "", ""] ];
+                        const merges = [ { s: { r: 4, c: 0 }, e: { r: 5, c: 0 } }, { s: { r: 4, c: 1 }, e: { r: 5, c: 1 } }, { s: { r: 4, c: 2 }, e: { r: 5, c: 2 } }, { s: { r: 4, c: 3 }, e: { r: 5, c: 3 } }, { s: { r: 4, c: 4 }, e: { r: 4, c: 6 } }, { s: { r: 4, c: 7 }, e: { r: 5, c: 7 } }, { s: { r: 4, c: 8 }, e: { r: 5, c: 8 } }, { s: { r: 4, c: 9 }, e: { r: 5, c: 9 } }, { s: { r: 4, c: 10 }, e: { r: 5, c: 10 } }, { s: { r: 4, c: 11 }, e: { r: 5, c: 11 } }, { s: { r: 4, c: 12 }, e: { r: 5, c: 12 } }, { s: { r: 4, c: 13 }, e: { r: 5, c: 13 } }, { s: { r: 4, c: 14 }, e: { r: 5, c: 14 } }, { s: { r: 4, c: 15 }, e: { r: 5, c: 15 } }, { s: { r: 4, c: 16 }, e: { r: 5, c: 16 } }, ];
+                        const rowHeights = []; rowHeights[0] = { hpx: 20 }; rowHeights[1] = { hpx: 20 }; rowHeights[2] = { hpx: 20 }; rowHeights[3] = { hpx: 10 }; rowHeights[4] = { hpx: 25 }; rowHeights[5] = { hpx: 25 };
+                        let currentRow = 6;
+                        dataToExport.forEach((r, i) => {
+                            wsData.push([ i + 1, formatDateID(r.date), r.city, r.customer, r.plateNo || '-', "", "", parseVal(r.costParking), getTollString(r, ', '), parseVal(r.costMaintenance), parseVal(r.costPublicTransport), parseVal(r.costMeal), parseVal(r.costHotel), parseVal(r.costDriver), parseVal(r.costEntertain), getOtherString(r, ', '), parseVal(r.total) ]);
+                            rowHeights[currentRow] = { hpx: 18 }; 
+                            wsData.push([ "", "", "", "", Number(r.fuelVol), r.fuelKm, parseVal(r.costFuel), "", "", "", "", "", "", "", "", "", "" ]);
+                            rowHeights[currentRow + 1] = { hpx: 25 }; 
+                            [0, 1, 2, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].forEach(col => { merges.push({ s: { r: currentRow, c: col }, e: { r: currentRow + 1, c: col } }); });
+                            merges.push({ s: { r: currentRow, c: 4 }, e: { r: currentRow, c: 6 } });
+                            currentRow += 2;
+                        });
+                        wsData.push(["TOTAL", "", "", "", sumVol, "", sumFuel, sumParking, sumToll, sumMaint, sumTrans, sumMeal, sumHotel, sumDriver, sumEntertain, sumOther, grandTotal.value]);
+                        const totalRowIndex = wsData.length - 1; merges.push({ s: { r: totalRowIndex, c: 0 }, e: { r: totalRowIndex, c: 3 } });
+                        wsData.push([], ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "TOTAL KELUAR", grandTotal.value], ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "KASBON", parseVal(header.kasbon)], ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "SISA", balance.value]);
+                        const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(wsData); ws['!merges'] = merges; ws['!rows'] = rowHeights; 
+                        ws['!cols'] = [ { wch: 6 }, { wch: 10 }, { wch: 15 }, { wch: 25 }, { wch: 6 }, { wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 } ];
+                        const range = XLSX.utils.decode_range(ws['!ref']); 
+                        for(let R = 6; R <= range.e.r; ++R) { [6,7,9,10,11,12,13,14,15,16].forEach(C => { const cell = ws[XLSX.utils.encode_cell({r:R, c:C})]; if(cell && cell.t === 'n') cell.z = '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)'; }); const noCell = ws[XLSX.utils.encode_cell({r:R, c:0})]; if(noCell) { if(!noCell.s) noCell.s = {}; noCell.s.alignment = { horizontal: 'center', vertical: 'center' }; } } 
+                        XLSX.utils.book_append_sheet(wb, ws, "Laporan"); XLSX.writeFile(wb, `${fileName}.xlsx`);
                     } else if (type === 'image') {
                         if (!window.html2canvas) { alert("Library Gambar belum siap!"); return; }
                         document.getElementById('print-name').innerText = header.salesName || '-'; document.getElementById('print-unit').innerText = header.unit || '-';
@@ -1758,21 +1680,54 @@
                         const thead = document.querySelector('#print-area thead');
                         thead.innerHTML = `
                             <tr class="bg-white text-black text-center font-bold">
-                                <th class="border border-black p-2 w-10" rowspan="2">No.</th><th class="border border-black p-2 w-20" rowspan="2">Tgl.</th><th class="border border-black p-2" rowspan="2">Kota Tujuan</th><th class="border border-black p-2 w-48" rowspan="2">Customer</th><th class="border border-black p-2" colspan="3">BBM</th><th class="border border-black p-2 w-24" rowspan="2">Parkir</th><th class="border border-black p-2 w-48" rowspan="2">Tol</th><th class="border border-black p-2 w-20" rowspan="2">Perbaikan Mobil</th><th class="border border-black p-2 w-20" rowspan="2">Transportasi Umum</th><th class="border border-black p-2 w-24" rowspan="2">Uang Makan</th><th class="border border-black p-2 w-24" rowspan="2">Hotel</th><th class="border border-black p-2 w-16" rowspan="2">Extra Supir</th><th class="border border-black p-2 w-24" rowspan="2">Entertain</th><th class="border border-black p-2 w-32" rowspan="2">Lain-lain</th><th class="border border-black p-2 w-28" rowspan="2">Jumlah</th>
+                                <th class="border border-black p-2 w-10" rowspan="2">No.</th>
+                                <th class="border border-black p-2 w-20" rowspan="2">Tgl.</th>
+                                <th class="border border-black p-2" rowspan="2">Kota Tujuan</th>
+                                <th class="border border-black p-2 w-48" rowspan="2">Customer</th>
+                                <th class="border border-black p-2" colspan="3">BBM</th>
+                                <th class="border border-black p-2 w-24" rowspan="2">Parkir</th>
+                                <th class="border border-black p-2 w-48" rowspan="2">Tol</th>
+                                <th class="border border-black p-2 w-20" rowspan="2">Perbaikan Mobil</th>
+                                <th class="border border-black p-2 w-20" rowspan="2">Transportasi Umum</th>
+                                <th class="border border-black p-2 w-24" rowspan="2">Uang Makan</th>
+                                <th class="border border-black p-2 w-24" rowspan="2">Hotel</th>
+                                <th class="border border-black p-2 w-16" rowspan="2">Extra Supir</th>
+                                <th class="border border-black p-2 w-24" rowspan="2">Entertain</th>
+                                <th class="border border-black p-2 w-32" rowspan="2">Lain-lain</th>
+                                <th class="border border-black p-2 w-28" rowspan="2">Jumlah</th>
                             </tr>
                             <tr class="bg-white text-black text-center font-bold">
-                                <th class="border border-black p-1 w-12">Vol.</th><th class="border border-black p-1 w-16">Km.</th><th class="border border-black p-1 w-20">Rp.</th>
+                                <th class="border border-black p-1 w-12">Vol.</th>
+                                <th class="border border-black p-1 w-16">Km</th>
+                                <th class="border border-black p-1 w-20">Rp.</th>
                             </tr>
                         `;
 
                         dataToExport.forEach((r, i) => {
-                            const tollString = getTollString(r, '<br>'); const otherString = getOtherString(r, '<br>');
+                            const tollString = getTollString(r, '<br>');
+                            const otherString = getOtherString(r, '<br>');
                             let rowHTML = `
                                 <tr class="text-center border border-gray-400">
-                                    <td class="border border-gray-400 p-2 text-center" rowspan="2">${i+1}</td><td class="border border-gray-400 p-2 text-center" rowspan="2">${formatDateID(r.date)}</td><td class="border border-gray-400 p-2 text-left" rowspan="2">${r.city}</td><td class="border border-gray-400 p-2 text-left" rowspan="2">${r.customer}</td><td class="border border-gray-400 p-0 text-[9px] font-bold bg-gray-50 h-4 align-middle" colspan="3">${r.plateNo || '-'}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costParking)}</td><td class="border border-gray-400 p-2 text-left text-[10px]" rowspan="2">${tollString}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costMaintenance)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costPublicTransport)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costMeal)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costHotel)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costDriver)}</td><td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costEntertain)}</td><td class="border border-gray-400 p-2 text-left text-[10px]" rowspan="2">${otherString}</td><td class="border border-gray-400 p-2 font-bold" rowspan="2">${makeCell(formatVal(r.total))}</td>
+                                    <td class="border border-gray-400 p-2 text-center" rowspan="2">${i+1}</td>
+                                    <td class="border border-gray-400 p-2 text-center" rowspan="2">${formatDateID(r.date)}</td>
+                                    <td class="border border-gray-400 p-2 text-left" rowspan="2">${r.city}</td>
+                                    <td class="border border-gray-400 p-2 text-left" rowspan="2">${r.customer}</td>
+                                    <td class="border border-gray-400 p-0 text-[9px] font-bold bg-gray-50 h-4 align-middle" colspan="3">${r.plateNo || '-'}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costParking)}</td>
+                                    <td class="border border-gray-400 p-2 text-left text-[10px]" rowspan="2">${tollString}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costMaintenance)}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costPublicTransport)}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costMeal)}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costHotel)}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costDriver)}</td>
+                                    <td class="border border-gray-400 p-2" rowspan="2">${makeCell(r.costEntertain)}</td>
+                                    <td class="border border-gray-400 p-2 text-left text-[10px]" rowspan="2">${otherString}</td>
+                                    <td class="border border-gray-400 p-2 font-bold" rowspan="2">${makeCell(formatVal(r.total))}</td>
                                 </tr>
                                 <tr class="text-center border border-gray-400">
-                                    <td class="border border-gray-400 p-2">${r.fuelVol || '-'}</td><td class="border border-gray-400 p-2">${r.fuelKm || '-'}</td><td class="border border-gray-400 p-2">${makeCell(r.costFuel)}</td>
+                                    <td class="border border-gray-400 p-2">${r.fuelVol || '-'}</td>
+                                    <td class="border border-gray-400 p-2">${r.fuelKm || '-'}</td>
+                                    <td class="border border-gray-400 p-2">${makeCell(r.costFuel)}</td>
                                 </tr>
                             `;
                             tbody.innerHTML += rowHTML;
@@ -1783,18 +1738,18 @@
                         document.getElementById('print-total').innerHTML = makeCell(formatVal(grandTotal.value));
                         document.getElementById('print-kasbon').innerHTML = makeCell(header.kasbon || '0');
                         document.getElementById('print-balance').innerHTML = makeCell(formatVal(balance.value));
-                        
                         document.getElementById('print-sig-date').innerText = `Kudus, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
                         document.getElementById('print-sig-name').innerText = `( ${header.salesName || 'Karyawan'} )`;
-
                         document.getElementById('print-area').style.visibility = "visible";
                         html2canvas(document.getElementById('print-area')).then(canvas => { document.getElementById('print-area').style.visibility = "hidden"; const link = document.createElement('a'); link.download = `${fileName}.jpg`; link.href = canvas.toDataURL('image/jpeg', 1.0); link.click(); });
-                    } else if (type === 'excel') {
-                        alert("Silahkan gunakan fitur Export PDF atau Image sebagai bukti resmi.");
                     }
                 };
 
-                return { isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, tollList, otherList, costFields, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filterStatus, filterKaryawan, searchQuery, uniqueKaryawanList, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation, showNotifModal, notifications, unreadCount, openFromNotif, markAllNotifRead, currentMenu, kasbonForm, formatKasbonNominal, generateKasbonPDF, terbilang, ppdForm, formatPpdBiaya, addPpdRow, removePpdRow, generatePpdPDF };
+                return { 
+                    isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, customerList, tollList, otherList, costFields, addCustomer, removeCustomer, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filterStatus, filterKaryawan, searchQuery, uniqueKaryawanList, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation, showNotifModal, notifications, unreadCount, openFromNotif, markAllNotifRead, currentMenu, kasbonForm, formatKasbonNominal, generateKasbonPDF, terbilang, ppdForm, formatPpdBiaya, addPpdRow, removePpdRow, generatePpdPDF,
+                    // EXPOSE SIGNATURE PROPERTIES AND METHODS
+                    signatureDataUrl, showSigModal, sigTab, openSigModal, closeSigModal, clearSig, saveSig, startDraw, endDraw, draw, handleUploadSig
+                };
             }
         }).mount('#app');
     </script>
