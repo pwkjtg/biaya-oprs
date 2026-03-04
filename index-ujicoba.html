@@ -313,7 +313,7 @@
                                 </div>
                                 <p class="text-[10px] text-gray-400 mt-1 italic">Terbilang: {{ terbilang(kasbonForm.jumlah) }}</p>
                             </div>
-                            
+
                             <!-- KOMPONEN TANDA TANGAN (KASBON) -->
                             <div class="pt-4 border-t border-gray-100 dark:border-gray-700 mt-4">
                                 <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -598,13 +598,11 @@
                 </div>
                 
                 <div class="p-5 space-y-4">
-                    <!-- Tab Menu TTD -->
                     <div class="flex gap-2 bg-gray-100 dark:bg-dark-900 p-1 rounded-xl">
                         <button @click="sigTab = 'draw'" :class="sigTab === 'draw' ? 'bg-white dark:bg-dark-700 shadow font-bold text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'" class="flex-1 py-2 rounded-lg text-xs transition">Gambar</button>
                         <button @click="sigTab = 'upload'" :class="sigTab === 'upload' ? 'bg-white dark:bg-dark-700 shadow font-bold text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'" class="flex-1 py-2 rounded-lg text-xs transition">Upload Foto</button>
                     </div>
 
-                    <!-- Canvas Gambar -->
                     <div v-show="sigTab === 'draw'" class="space-y-3">
                         <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 overflow-hidden relative" style="height: 200px;">
                             <canvas id="sigCanvas" class="w-full h-full absolute top-0 left-0 cursor-crosshair" @mousedown="startDraw" @mousemove="draw" @mouseup="endDraw" @mouseleave="endDraw" @touchstart="startDraw" @touchmove.prevent="draw" @touchend="endDraw"></canvas>
@@ -615,7 +613,6 @@
                         </div>
                     </div>
 
-                    <!-- Upload Foto -->
                     <div v-show="sigTab === 'upload'" class="space-y-3 text-center py-6">
                         <svg class="w-12 h-12 text-emerald-500 mx-auto mb-2 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 px-4">Upload foto tanda tangan dari kamera/galeri. Background terang akan otomatis dihapus.</p>
@@ -714,14 +711,14 @@
                         <div class="flex justify-between items-center mb-2"><label class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase">Customer</label><button @click="addCustomer" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold">+ Customer</button></div>
                         <div class="space-y-2">
                             <div v-for="(cust, index) in customerList" :key="index" class="flex gap-2">
-                                <input type="text" v-model="cust.name" class="flex-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white placeholder-gray-400" placeholder="Nama Customer">
+                                <input type="text" v-model="cust.name" class="flex-1 p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl text-base font-medium dark:text-white placeholder-gray-400" placeholder="Contoh: Univ. Diponegoro">
                                 <button v-if="customerList.length > 1" @click="removeCustomer(index)" class="px-3 text-red-500 bg-red-50 rounded-xl font-bold">✕</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- BBM & KENDARAAN -->
+                <!-- BBM & KENDARAAN (PLAT NO PINDAH ATAS) -->
                 <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm space-y-3">
                     <h4 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase">BBM & Kendaraan</h4>
                     <div>
@@ -735,7 +732,7 @@
                     </div>
                 </div>
 
-                <!-- TOL -->
+                <!-- TOL (MULTI ENTRY) -->
                 <div class="bg-orange-50/50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/30 shadow-sm space-y-3">
                     <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase">Rincian Tol</h4><span class="text-xs font-bold bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalTollCost) }}</span></div>
                     <div class="space-y-3">
@@ -762,7 +759,7 @@
                     </div>
                 </div>
 
-                <!-- LAIN-LAIN -->
+                <!-- LAIN-LAIN (MULTI ENTRY BARU - DIPINDAH KE BAWAH) -->
                 <div class="bg-gray-50/50 dark:bg-gray-700/10 p-4 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm space-y-3">
                     <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Rincian Lain-lain</h4><span class="text-xs font-bold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalOtherCost) }}</span></div>
                     <div class="space-y-3">
@@ -1363,11 +1360,12 @@
                     doc.text(`TERBILANG: ${generateTerbilang(kasbonForm.jumlah).toUpperCase()}`, 15, finalY);
 
                     // =========================================================================
-                    // TANDA TANGAN BSK: BOLD + UNDERSCORE KETIGANYA + GAMBAR TTD
+                    // TANDA TANGAN BSK
                     // =========================================================================
                     const sigY = finalY + 25;
                     doc.setFont(undefined, "normal");
                     doc.text("PERSETUJUAN DIBUAT", 70, sigY, {align: "center"});
+                    
                     doc.text("Pemohon", 160, sigY, {align: "center"});
 
                     const nameY = sigY + 25;
@@ -1375,7 +1373,7 @@
                     const agusText = "AGUS RIYANTO";
                     const pemohonText = currentUser.name.toUpperCase();
 
-                    // --- INJECT SIGNATURE GAMBAR ---
+                    // --- INJECT SIGNATURE GAMBAR (KASBON) ---
                     if (signatureDataUrl.value) {
                         doc.addImage(signatureDataUrl.value, 'PNG', 160 - 15, nameY - 18, 30, 15);
                     }
@@ -1457,7 +1455,8 @@
 
                     doc.autoTable({
                         startY: startY + 5, head: head, body: body, theme: 'plain',
-                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 3 },
+                        // MENGECILKAN BARIS/SPASI PADA PPD: cellPadding diubah jadi 1.5
+                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 1.5 },
                         headStyles: { fillColor: [255,255,255], textColor: [0,0,0], halign: 'center', fontStyle: 'bold' },
                         columnStyles: { 0: {cellWidth: 20}, 1: {cellWidth: 30}, 2: {cellWidth: 55}, 3: {cellWidth: 45} }
                     });
@@ -1501,7 +1500,13 @@
                     doc.line(150 - (wPp/2), finalY+1, 150 + (wPp/2), finalY+1);
                     
                     doc.setFont(undefined, "normal"); // KEMBALI NORMAL
-                    const toTitleCase = (str) => { return str.replace(/\w\S*/g, function(txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); }); };
+                    
+                    // TITLE CASE JABATAN
+                    const toTitleCase = (str) => {
+                        return str.replace(/\w\S*/g, function(txt) {
+                            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                        });
+                    };
 
                     doc.text("Assistant Sales Manager", 50, finalY+6, {align: "center"});
                     doc.text(`${toTitleCase(currentUser.unit.split('/')[0].trim())}`, 150, finalY+6, {align:"center"});
@@ -1722,7 +1727,7 @@
 
                 return { 
                     isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, customerList, tollList, otherList, costFields, addCustomer, removeCustomer, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filterStatus, filterKaryawan, searchQuery, uniqueKaryawanList, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation, showNotifModal, notifications, unreadCount, openFromNotif, markAllNotifRead, currentMenu, kasbonForm, formatKasbonNominal, generateKasbonPDF, terbilang, ppdForm, formatPpdBiaya, addPpdRow, removePpdRow, generatePpdPDF,
-                    // PROPERTIES TANDA TANGAN 
+                    // EXPOSE SIGNATURE PROPERTIES AND METHODS
                     signatureDataUrl, showSigModal, sigTab, openSigModal, closeSigModal, clearSig, saveSig, startDraw, endDraw, draw, handleUploadSig
                 };
             }
