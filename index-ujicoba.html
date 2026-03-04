@@ -1444,9 +1444,13 @@
                     doc.text("Tujuan dan Lama Perjalanan", 15, startY); doc.text(`: ${ppdForm.tujuan.toUpperCase()}`, 70, startY); startY += 8;
                     doc.text("Perkiraan Biaya", 15, startY); doc.text(`: RP ${ppdForm.biayaFormatted}`, 70, startY); startY += 8;
                     doc.text("Transportasi", 15, startY); doc.text(`: ${ppdForm.transportasi.toUpperCase()}`, 70, startY); startY += 8;
-                    doc.text("Keperluan", 15, startY); doc.text(`: ${ppdForm.keperluan.toUpperCase()}`, 70, startY); 
+                    doc.text("Keperluan", 15, startY); 
                     
-                    startY += 20;
+                    // Handle multi-line for Keperluan to prevent overlap
+                    const splitKeperluan = doc.splitTextToSize(`: ${ppdForm.keperluan.toUpperCase()}`, 125);
+                    doc.text(splitKeperluan, 70, startY);
+                    startY += (splitKeperluan.length * 5) + 12; // Adjust startY based on multi-line text
+
                     doc.setFont(undefined, "bold");
                     doc.text("LAMPIRAN IJIN PERJALANAN DINAS LUAR KOTA", 15, startY);
                     
@@ -1454,14 +1458,30 @@
                     const body = ppdForm.jadwal.map(j => [formatDateToShort(j.tgl), j.kota.toUpperCase(), j.perusahaan.toUpperCase(), j.keperluan.toUpperCase(), j.omzet.toUpperCase()]);
 
                     doc.autoTable({
-                        startY: startY + 5, head: head, body: body, theme: 'plain',
-                        // MENGECILKAN BARIS/SPASI PADA PPD: cellPadding diubah jadi 1.5
-                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 1.5 },
+                        startY: startY + 5, 
+                        head: head, 
+                        body: body, 
+                        theme: 'plain',
+                        // MENGECILKAN BARIS/SPASI PADA PPD: cellPadding diatur ke nilai sangat kecil
+                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 1, minCellHeight: 6 },
                         headStyles: { fillColor: [255,255,255], textColor: [0,0,0], halign: 'center', fontStyle: 'bold' },
-                        columnStyles: { 0: {cellWidth: 20}, 1: {cellWidth: 30}, 2: {cellWidth: 55}, 3: {cellWidth: 45} }
+                        columnStyles: { 0: {cellWidth: 20}, 1: {cellWidth: 30}, 2: {cellWidth: 55}, 3: {cellWidth: 45} },
+                        // Mengatur agar tabel bisa berpindah halaman jika terlalu panjang
+                        margin: { bottom: 60 }, // Berikan margin bawah yang cukup untuk tanda tangan jika di halaman yang sama, atau pindah halaman jika mepet
+                        pageBreak: 'auto',
+                        showHead: 'everyPage'
                     });
 
+                    // Cek apakah sisa ruang cukup untuk bagian tanda tangan (butuh sekitar 60mm)
+                    // Jika tidak cukup, tambahkan halaman baru
                     let finalY = doc.lastAutoTable.finalY + 15;
+                    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+                    
+                    if (finalY + 60 > pageHeight) {
+                        doc.addPage();
+                        finalY = 20; // Reset Y ke atas halaman baru
+                    }
+
                     doc.setFont(undefined, "normal");
                     doc.text("Saran dari atasan:", 15, finalY);
                     doc.text(".......................................................................................................................................", 45, finalY);
