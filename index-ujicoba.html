@@ -718,7 +718,7 @@
                     </div>
                 </div>
 
-                <!-- BBM & KENDARAAN (PLAT NO PINDAH ATAS) -->
+                <!-- BBM & KENDARAAN -->
                 <div class="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm space-y-3">
                     <h4 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase">BBM & Kendaraan</h4>
                     <div>
@@ -732,7 +732,7 @@
                     </div>
                 </div>
 
-                <!-- TOL (MULTI ENTRY) -->
+                <!-- TOL -->
                 <div class="bg-orange-50/50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/30 shadow-sm space-y-3">
                     <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-orange-800 dark:text-orange-300 uppercase">Rincian Tol</h4><span class="text-xs font-bold bg-orange-200 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalTollCost) }}</span></div>
                     <div class="space-y-3">
@@ -759,7 +759,7 @@
                     </div>
                 </div>
 
-                <!-- LAIN-LAIN (MULTI ENTRY BARU - DIPINDAH KE BAWAH) -->
+                <!-- LAIN-LAIN -->
                 <div class="bg-gray-50/50 dark:bg-gray-700/10 p-4 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-sm space-y-3">
                     <div class="flex justify-between items-center"><h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">Rincian Lain-lain</h4><span class="text-xs font-bold bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">Total: {{ formatCurrency(totalOtherCost) }}</span></div>
                     <div class="space-y-3">
@@ -786,11 +786,7 @@
         <div v-if="showDeleteModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center animate-zoom">
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Konfirmasi Hapus</h3>
-                <p class="text-sm text-gray-500 mb-4">Apakah Anda yakin ingin menghapus data ini? Perubahan akan langsung tersimpan ke database.</p>
-                <div class="flex gap-3 mt-4">
-                    <button @click="showDeleteModal = false" class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold transition hover:bg-gray-200">Batal</button>
-                    <button @click="executeDelete" class="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl shadow-lg transition hover:bg-red-700">Ya, Hapus</button>
-                </div>
+                <div class="flex gap-3 mt-4"><button @click="showDeleteModal = false" class="flex-1 py-2.5 bg-gray-100 rounded-xl font-bold">Batal</button><button @click="executeDelete" class="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-xl shadow-lg">Ya, Hapus</button></div>
             </div>
         </div>
 
@@ -801,48 +797,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
-        // =========================================================================
-        // URL WEB APP GOOGLE SCRIPT TERBARU
-        // =========================================================================
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwftinAM51hWJ0-NS6cAYeHM8W-mn8JVh_dtDUiRkeH4WpGCL6gtpIYtOFfPyYgXWlm/exec"; 
-
-        const daftarKaryawan = {
-            "maris@kudus.puragroup.com": { nama: "MARIS TRI WARDANI", unit: "Finance", role: "kasir" },
-            "bayufajar@kudus.puragroup.com": { nama: "BAYU FAJAR HABIBI", unit: "IT & Admin", role: "admin" },
-            "aguscombi@kudus.puragroup.com": { nama: "AGUS JOKO PITONO", unit: "Job Order", role: "karyawan" },
-            "agus-ps@kudus.puragroup.com": { nama: "AGUS PUJI SANTOSO", unit: "PM Group", role: "karyawan" },
-            "riyanto_agus@kudus.puragroup.com": { nama: "AGUS RIYANTO", unit: "Job Order", role: "karyawan" },
-            "alexander-p@kudus.puragroup.com": { nama: "ALEXANDER PRASETYO", unit: "Job Order", role: "karyawan" },
-            "bimorejoko@kudus.puragroup.com": { nama: "BIMO REJOKO", unit: "Collector", role: "karyawan" },
-            "didik_setyawan@kudus.puragroup.com": { nama: "DIDIK SETYAWAN", unit: "Job Order", role: "karyawan" },
-            "djoni_purnomo@kudus.puragroup.com": { nama: "DJONI PURNOMO SOELISTIJO", unit: "Job Order", role: "karyawan" },
-            "dwi_tss@kudus.puragroup.com": { nama: "DWI SUCAHYONO", unit: "TSS", role: "karyawan" },
-            "fredy.setiawan@kudus.puragroup.com": { nama: "FREDY SETIAWAN PLATINI DTH", unit: "Collector", role: "karyawan" },
-            "christ-t@kudus.puragroup.com": { nama: "GATOT CHRISTIAN TRIANTOKO", unit: "Job Order", role: "karyawan" },
-            "handoko@kudus.puragroup.com": { nama: "HANDOKO JUWONO", unit: "Job Order", role: "karyawan" },
-            "henry@kudus.puragroup.com": { nama: "HENRY CAHYA SUGIARTO", unit: "Collector", role: "karyawan" },
-            "intanindah@kudus.puragroup.com": { nama: "INTAN HERYATI INDAH", unit: "TSS", role: "karyawan" },
-            "jatiwicaksono@kudus.puragroup.com": { nama: "JATI WICAKSONO", unit: "Coating Adhesive", role: "karyawan" },
-            "jefri-k@kudus.puragroup.com": { nama: "JEFRI KURNIAWAN", unit: "PM Group", role: "karyawan" },
-            "joshua-b@kudus.puragroup.com": { nama: "JOSHUA BERNADINO LISTIANTO", unit: "PM Group", role: "karyawan" },
-            "krisna.hutomo@kudus.puragroup.com": { nama: "KRISNA SATRIO HUTOMO", unit: "Job Order", role: "karyawan" },
-            "kust_tss@kudus.puragroup.com": { nama: "KUSTARYONO", unit: "TSS", role: "karyawan" },
-            "marwanto@kudus.puragroup.com": { nama: "MARWANTO", unit: "Job Order", role: "karyawan" },
-            "michelle.d@kudus.puragroup.com": { nama: "MICHELLE DHIFA SEPTIANI NUGROHO", unit: "Job Order", role: "karyawan" },
-            "adam-m@kudus.puragroup.com": { nama: "MUHAMMAD ADAM MAULANA", unit: "Collector", role: "karyawan" },
-            "collector_jateng@kudus.puragroup.com": { nama: "MUHAMMAD CHAIRUL WAHYUDI", unit: "Collector", role: "karyawan" },
-            "retno_tss@kudus.puragroup.com": { nama: "RETNO WIDYASARI", unit: "TSS", role: "karyawan" },
-            "danu@kudus.puragroup.com": { nama: "RIZKY DANU PRAKOSO", unit: "PM Group", role: "karyawan" },
-            "rokhani@kudus.puragroup.com": { nama: "ROKHANI DHANANJAYA", unit: "Job Order", role: "karyawan" },
-            "rurizaki@kudus.puragroup.com": { nama: "RURI ZAKI KURNIAWAN", unit: "Collector", role: "karyawan" },
-            "septyo_dwi@kudus.puragroup.com": { nama: "SEPTYO DWI HARMANTO", unit: "PST", role: "karyawan" },
-            "u_ud@kudus.puragroup.com": { nama: "SHOLAHUDDIN", unit: "Metallizing & Indostamping", role: "karyawan" },
-            "sulistianto@kudus.puragroup.com": { nama: "SULISTIANTO", unit: "Collector", role: "karyawan" },
-            "suuunarto@gmail.com": { nama: "SUNARTO", unit: "Driver", role: "karyawan" },
-            "tiananton@kudus.puragroup.com": { nama: "TIAN ANTON SOETRISNO", unit: "Collector", role: "karyawan" },
-            "warsito@kudus.puragroup.com": { nama: "WARSITO", unit: "Job Order", role: "karyawan" },
-            "yolandakartika@kudus.puragroup.com": { nama: "YOLANDA KARTIKA DEWI", unit: "HR", role: "karyawan" }
-        };
 
         const firebaseConfig = {
             apiKey: "AIzaSyDOc6bPBHFSbVsYQF5qszSjBwziQEI6rEc",
@@ -907,25 +862,21 @@
                 const loadingMessage = ref('Memproses...');
                 const showSettings = ref(false);
                 
-                // --- STATE MENU UTAMA ---
                 const currentMenu = ref('selection');
 
                 const todayDateStr = new Date().toISOString().split('T')[0];
 
-                // --- STATE KASBON ---
                 const kasbonForm = reactive({
                     tglMulai: todayDateStr, tglSelesai: todayDateStr, tglPenyelesaian: todayDateStr, 
                     keterangan: 'PERJALAN DINAS', jumlah: 1000000, jumlahFormatted: '1.000.000'
                 });
 
-                // --- STATE PPD ---
                 const ppdForm = reactive({
                     tglMulai: todayDateStr, tglSelesai: todayDateStr, tujuan: '', transportasi: '', 
                     biaya: 1000000, biayaFormatted: '1.000.000', keperluan: '',
                     jadwal: [{tgl: todayDateStr, kota: '', perusahaan: '', keperluan: '', omzet: ''}]
                 });
 
-                // --- STATE TANDA TANGAN ---
                 const signatureDataUrl = ref(localStorage.getItem('salesAppSignature') || null);
                 const showSigModal = ref(false);
                 const sigTab = ref('draw');
@@ -971,7 +922,6 @@
 
                 const resetFilter = () => { filterDateStart.value = ''; filterDateEnd.value = ''; filterStatus.value = ''; filterKaryawan.value = ''; searchQuery.value = ''; };
 
-                // --- TANDA TANGAN METHODS ---
                 const openSigModal = () => {
                     showSigModal.value = true;
                     setTimeout(() => {
@@ -1116,7 +1066,9 @@
                             isLoggedIn.value = true;
                             currentMenu.value = 'selection'; 
                             const emailUser = user.email.toLowerCase();
-                            const profil = daftarKaryawan[emailUser] || { nama: emailUser, unit: "Unit Tidak Terdaftar", role: "karyawan" };
+                            // Data fetch handling
+                            const foundKey = Object.keys(daftarKaryawan).find(k => k.toLowerCase() === emailUser);
+                            const profil = foundKey ? daftarKaryawan[foundKey] : { nama: emailUser, unit: "Unit Tidak Terdaftar", role: "karyawan" };
                             
                             currentUser.name = profil.nama;
                             currentUser.unit = profil.unit;
@@ -1360,20 +1312,15 @@
                     doc.text(`TERBILANG: ${generateTerbilang(kasbonForm.jumlah).toUpperCase()}`, 15, finalY);
 
                     // =========================================================================
-                    // TANDA TANGAN BSK
+                    // TANDA TANGAN BSK: BOLD + UNDERSCORE KETIGANYA + GAMBAR TTD
                     // =========================================================================
-                    const sigY = finalY + 25;
+                    const sigY = finalY + 15;
                     doc.setFont(undefined, "normal");
                     doc.text("PERSETUJUAN DIBUAT", 70, sigY, {align: "center"});
-                    
-                    doc.text("Pemohon", 160, sigY, {align: "center"});
 
-                    const nameY = sigY + 25;
-                    const marisText = "MARIS T.W.";
-                    const agusText = "AGUS RIYANTO";
-                    const pemohonText = currentUser.name.toUpperCase();
+                    const nameY = sigY + 20;
 
-                    // --- INJECT SIGNATURE GAMBAR (KASBON) ---
+                    // --- INJECT SIGNATURE GAMBAR ---
                     if (signatureDataUrl.value) {
                         doc.addImage(signatureDataUrl.value, 'PNG', 160 - 15, nameY - 18, 30, 15);
                     }
@@ -1381,30 +1328,33 @@
                     doc.setFont(undefined, "bold"); // BOLD SEMUA NAMA
 
                     // --- MARIS ---
+                    const marisText = "MARIS T.W.";
                     doc.text(marisText, 40, nameY, {align: "center"});
                     let wM = doc.getTextWidth(marisText);
-                    doc.setLineWidth(0.2);
+                    doc.setLineWidth(0.3);
                     doc.line(40 - (wM/2), nameY+1, 40 + (wM/2), nameY+1);
 
                     // --- AGUS ---
+                    const agusText = "AGUS RIYANTO";
                     doc.text(agusText, 100, nameY, {align: "center"});
                     let wA = doc.getTextWidth(agusText);
                     doc.line(100 - (wA/2), nameY+1, 100 + (wA/2), nameY+1); 
 
                     // --- PEMOHON ---
+                    const pemohonText = currentUser.name.toUpperCase();
                     doc.text(pemohonText, 160, nameY, {align: "center"});
                     let wP = doc.getTextWidth(pemohonText);
                     doc.line(160 - (wP/2), nameY+1, 160 + (wP/2), nameY+1);
 
                     // JABATAN (TIDAK BOLD, Title Case)
                     doc.setFont(undefined, "normal");
-                    doc.text("Kasir", 40, nameY+6, {align: "center"});
-                    doc.text("Assistant Sales Manager", 100, nameY+6, {align: "center"}); 
+                    doc.text("Kasir", 40, nameY+5, {align: "center"});
+                    doc.text("Assistant Sales Manager", 100, nameY+5, {align: "center"}); 
                     
                     const toTitleCase = (str) => { return str.replace(/\w\S*/g, function(txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); }); };
-                    doc.text(`${toTitleCase(currentUser.unit.split('/')[0].trim())}`, 160, nameY+6, {align: "center"});
+                    doc.text(`${toTitleCase(currentUser.unit.split('/')[0].trim())}`, 160, nameY+5, {align: "center"});
                     
-                    const bottomY = nameY + 20;
+                    const bottomY = nameY + 15;
                     doc.setFont(undefined, "normal"); 
                     doc.text("DIISI OLEH KASIR PUSAT", 105, bottomY, {align: "center"});
                     doc.text("DIBAYAR,", 15, bottomY+10);
@@ -1427,29 +1377,28 @@
                     const doc = new jsPDF('portrait', 'mm', 'a4');
                     setupPdfFont(doc);
 
-                    doc.setFontSize(18); doc.setFont(undefined, "bold");
-                    doc.text("PENGAJUAN PERJALANAN DINAS", 105, 20, {align: "center"});
-                    doc.setFontSize(14); doc.setFont(undefined, "normal");
-                    doc.text("PWK - JATENG", 105, 28, {align: "center"});
+                    doc.setFontSize(14); doc.setFont(undefined, "bold");
+                    doc.text("KANTOR MARKETING JATENG", 105, 15, {align: "center"});
+                    doc.setFontSize(16);
+                    doc.text("FORM PENGAJUAN PERJALANAN DINAS", 105, 23, {align: "center"});
 
                     const tglMulaiStr = formatDateToDisplay(ppdForm.tglMulai);
                     const tglSelesaiStr = formatDateToDisplay(ppdForm.tglSelesai);
                     const tglTransGabungan = tglMulaiStr === tglSelesaiStr ? tglMulaiStr : `${tglMulaiStr} S/D ${tglSelesaiStr}`;
 
                     doc.setFontSize(10); doc.setFont(undefined, "normal");
-                    let startY = 42; 
-                    doc.text("Nama", 15, startY); doc.text(`: ${currentUser.name.toUpperCase()}`, 70, startY); startY += 8;
-                    doc.text("Bagian / Jabatan", 15, startY); doc.text(`: ${currentUser.unit.toUpperCase()}`, 70, startY); startY += 8;
-                    doc.text("Rencana Tanggal Perjalanan", 15, startY); doc.text(`: ${tglTransGabungan}`, 70, startY); startY += 8;
-                    doc.text("Tujuan dan Lama Perjalanan", 15, startY); doc.text(`: ${ppdForm.tujuan.toUpperCase()}`, 70, startY); startY += 8;
-                    doc.text("Perkiraan Biaya", 15, startY); doc.text(`: RP ${ppdForm.biayaFormatted}`, 70, startY); startY += 8;
-                    doc.text("Transportasi", 15, startY); doc.text(`: ${ppdForm.transportasi.toUpperCase()}`, 70, startY); startY += 8;
+                    let startY = 35; 
+                    doc.text("Nama", 15, startY); doc.text(`: ${currentUser.name.toUpperCase()}`, 65, startY); startY += 6;
+                    doc.text("Bagian / Jabatan", 15, startY); doc.text(`: ${currentUser.unit.toUpperCase()}`, 65, startY); startY += 6;
+                    doc.text("Rencana Tanggal Perjalanan", 15, startY); doc.text(`: ${tglTransGabungan}`, 65, startY); startY += 6;
+                    doc.text("Tujuan dan Lama Perjalanan", 15, startY); doc.text(`: ${ppdForm.tujuan.toUpperCase()}`, 65, startY); startY += 6;
+                    doc.text("Perkiraan Biaya", 15, startY); doc.text(`: RP ${ppdForm.biayaFormatted}`, 65, startY); startY += 6;
+                    doc.text("Transportasi", 15, startY); doc.text(`: ${ppdForm.transportasi.toUpperCase()}`, 65, startY); startY += 6;
                     doc.text("Keperluan", 15, startY); 
                     
-                    // Handle multi-line for Keperluan to prevent overlap
                     const splitKeperluan = doc.splitTextToSize(`: ${ppdForm.keperluan.toUpperCase()}`, 125);
-                    doc.text(splitKeperluan, 70, startY);
-                    startY += (splitKeperluan.length * 5) + 12; // Adjust startY based on multi-line text
+                    doc.text(splitKeperluan, 65, startY);
+                    startY += (splitKeperluan.length * 5) + 6; 
 
                     doc.setFont(undefined, "bold");
                     doc.text("LAMPIRAN IJIN PERJALANAN DINAS LUAR KOTA", 15, startY);
@@ -1458,28 +1407,24 @@
                     const body = ppdForm.jadwal.map(j => [formatDateToShort(j.tgl), j.kota.toUpperCase(), j.perusahaan.toUpperCase(), j.keperluan.toUpperCase(), j.omzet.toUpperCase()]);
 
                     doc.autoTable({
-                        startY: startY + 5, 
+                        startY: startY + 2, 
                         head: head, 
                         body: body, 
                         theme: 'plain',
-                        // MENGECILKAN BARIS/SPASI PADA PPD: cellPadding diatur ke nilai sangat kecil
-                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 1, minCellHeight: 6 },
+                        styles: { font: 'helvetica', fontSize: 9, lineColor: [0, 0, 0], lineWidth: 0.1, cellPadding: 1, minCellHeight: 5 },
                         headStyles: { fillColor: [255,255,255], textColor: [0,0,0], halign: 'center', fontStyle: 'bold' },
                         columnStyles: { 0: {cellWidth: 20}, 1: {cellWidth: 30}, 2: {cellWidth: 55}, 3: {cellWidth: 45} },
-                        // Mengatur agar tabel bisa berpindah halaman jika terlalu panjang
-                        margin: { bottom: 60 }, // Berikan margin bawah yang cukup untuk tanda tangan jika di halaman yang sama, atau pindah halaman jika mepet
+                        margin: { bottom: 60 },
                         pageBreak: 'auto',
                         showHead: 'everyPage'
                     });
 
-                    // Cek apakah sisa ruang cukup untuk bagian tanda tangan (butuh sekitar 60mm)
-                    // Jika tidak cukup, tambahkan halaman baru
-                    let finalY = doc.lastAutoTable.finalY + 15;
+                    let finalY = doc.lastAutoTable.finalY + 8;
                     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
                     
                     if (finalY + 60 > pageHeight) {
                         doc.addPage();
-                        finalY = 20; // Reset Y ke atas halaman baru
+                        finalY = 20; 
                     }
 
                     doc.setFont(undefined, "normal");
@@ -1489,15 +1434,15 @@
                     // =========================================================================
                     // TANDA TANGAN PPD DENGAN BOLD + UNDERSCORE KEDUANYA + GAMBAR TTD
                     // =========================================================================
-                    finalY += 20;
+                    finalY += 12;
                     const printDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
                     doc.text(`KUDUS, ${printDateStr}`, 150, finalY, {align: "center"});
                     
-                    finalY += 10;
+                    finalY += 8;
                     doc.text("Menyetujui", 50, finalY, {align: "center"});
                     doc.text("Pemohon", 150, finalY, {align: "center"});
 
-                    finalY += 30;
+                    finalY += 20;
                     const agusText = "AGUS RIYANTO";
                     const pemohonName = currentUser.name.toUpperCase();
 
@@ -1511,7 +1456,7 @@
                     // --- AGUS (PPD) ---
                     doc.text(agusText, 50, finalY, {align: "center"});
                     let wAp = doc.getTextWidth(agusText);
-                    doc.setLineWidth(0.2);
+                    doc.setLineWidth(0.3);
                     doc.line(50 - (wAp/2), finalY+1, 50 + (wAp/2), finalY+1);
 
                     // --- PEMOHON (PPD) ---
@@ -1528,8 +1473,8 @@
                         });
                     };
 
-                    doc.text("Assistant Sales Manager", 50, finalY+6, {align: "center"});
-                    doc.text(`${toTitleCase(currentUser.unit.split('/')[0].trim())}`, 150, finalY+6, {align:"center"});
+                    doc.text("Assistant Sales Manager", 50, finalY+5, {align: "center"});
+                    doc.text(`${toTitleCase(currentUser.unit.split('/')[0].trim())}`, 150, finalY+5, {align:"center"});
 
                     doc.save(`Form_PPD_${currentUser.name.replace(/\s+/g,'_')}.pdf`);
                 };
@@ -1747,7 +1692,6 @@
 
                 return { 
                     isDark, toggleTheme, loginForm, isLoggedIn, currentUser, handleLogin, handleLogout, resetReport, currentDate, header, rows, form, showForm, isEditing, customerList, tollList, otherList, costFields, addCustomer, removeCustomer, addToll, removeToll, addOther, removeOther, totalTollCost, totalOtherCost, currentFormTotal, grandTotal, balance, formatCurrency, formatDateID, openForm, saveEntry, editRow, requestDelete, executeDelete, showDeleteModal, deleteType, confirmClear, exportAction, formatInput, formatHeaderKasbon, formatTollInput, formatOtherInput, parseVal, formatVal, openSettings, saveSettings, showSettings, uploadToCloud, isLoading, loadingMessage, filterDateStart, filterDateEnd, filterStatus, filterKaryawan, searchQuery, uniqueKaryawanList, filteredRows, resetFilter, getSummaryString, syncData, showValidationModal, selectedRow, openValidationModal, submitValidation, showNotifModal, notifications, unreadCount, openFromNotif, markAllNotifRead, currentMenu, kasbonForm, formatKasbonNominal, generateKasbonPDF, terbilang, ppdForm, formatPpdBiaya, addPpdRow, removePpdRow, generatePpdPDF,
-                    // EXPOSE SIGNATURE PROPERTIES AND METHODS
                     signatureDataUrl, showSigModal, sigTab, openSigModal, closeSigModal, clearSig, saveSig, startDraw, endDraw, draw, handleUploadSig
                 };
             }
