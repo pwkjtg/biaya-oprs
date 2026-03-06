@@ -1,6 +1,6 @@
 {
   "name": "Sistem Operasional Terpadu",
-  "short_name": "SOM App",
+  "short_name": "Biaya Oprs",
   "start_url": "/biaya-oprs/",
   "display": "standalone",
   "background_color": "#ffffff",
